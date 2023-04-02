@@ -11,7 +11,7 @@ class TaskListResource(Resource):
             else:
                 result_temp = sorted(task, key=lambda d: d["id"], reverse=False)
         except KeyError:
-            result_temp = sorted(task, key=lambda d: d["id"], reverse=False)
+            result_temp = task
 
         try:
             result = result_temp[: request.json["max"]]
