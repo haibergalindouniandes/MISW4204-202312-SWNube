@@ -24,9 +24,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/auth/signup",
+					"raw": "{{host_sign}}/api/auth/signup",
 					"host": [
-						"{{host}}"
+						"{{host_sign}}"
 					],
 					"path": [
 						"api",
@@ -55,14 +55,44 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/auth/login",
+					"raw": "{{host_login}}/api/auth/login",
 					"host": [
-						"{{host}}"
+						"{{host_login}}"
 					],
 					"path": [
 						"api",
 						"auth",
 						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetTasks",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"max\":2,\r\n    \"order\":1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host_getTask}}/api/tasks",
+					"host": [
+						"{{host_getTask}}"
+					],
+					"path": [
+						"api",
+						"tasks"
 					]
 				}
 			},
@@ -91,8 +121,18 @@
 	],
 	"variable": [
 		{
-			"key": "host",
+			"key": "host_sign",
 			"value": "192.168.1.189:6600",
+			"type": "string"
+		},
+		{
+			"key": "host_login",
+			"value": "192.168.1.189:5000",
+			"type": "string"
+		},
+		{
+			"key": "host_getTask",
+			"value": "192.168.1.189:8080",
 			"type": "string"
 		}
 	]
