@@ -16,53 +16,92 @@ services:
     image: postgres:latest
     container_name: postgres
     environment:
-      POSTGRES_DB: "dbconvert"
-      POSTGRES_USER: "dbuser"
-      POSTGRES_PASSWORD: "dbpass"
+      POSTGRES_DB: dbconvert
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpass
       PGDATA: "/var/lib/postgresql/data"
     ports:
-      - "5555:5432"
+      - "5432:5432"
     networks:
       - convert_network
 
-  ftp:
+  ftp_server:
     container_name: ftp_server
     image: garethflowers/ftp-server
     environment:
-      - FTP_USER=ftp_user
-      - FTP_PASS=ftp_password
+      FTP_USER: ftp_user
+      FTP_PASS: ftp_password
     restart: always
     ports:
       - '20-21:20-21/tcp'
       - '40000-40009:40000-40009/tcp'
     volumes:
       - ./shared:/home/ftp_user/shared
+    networks:
+      - convert_network
 
-  mcs_tasks:
+  mcs_auth_commands:
+    image: mcs_auth:latest
+    volumes:
+      - ./mcs_auth/:/backend/
+    build: ./mcs_auth
+    working_dir: /backend/
+    command: sh run_commands.sh
+    container_name: mcs_auth_commands
+    networks:
+      - convert_network
+    depends_on:
+      - postgres
+
+  mcs_auth_queries:
+    image: mcs_auth:latest
+    volumes:
+      - ./mcs_auth/:/backend/
+    build: ./mcs_auth
+    working_dir: /backend/
+    command: sh run_queries.sh
+    container_name: mcs_auth_queries
+    networks:
+      - convert_network
+    depends_on:
+      - postgres
+
+  mcs_tasks_commands:
     image: mcs_tasks:latest
     volumes:
-      - ./mcs_tasks/:/mnt/
+      - ./mcs_tasks/:/backend/
     build: ./mcs_tasks
     working_dir: /backend/
-    # command: gunicorn --bind 0.0.0.0:5000 api_commands:app
-    command: python api_commands.py
-    container_name: mcs_tasks
-    ports:
-      - "5000:5000"
+    command: sh run_commands.sh
+    container_name: mcs_tasks_commands
     networks:
       - convert_network
     depends_on:
       - rabbitmq_broker
       - postgres
+      - ftp_server
+
+  mcs_tasks_queries:
+    image: mcs_tasks:latest
+    volumes:
+      - ./mcs_tasks/:/backend/
+    build: ./mcs_tasks
+    working_dir: /backend/
+    command: sh run_queries.sh
+    container_name: mcs_tasks_queries
+    networks:
+      - convert_network
+    depends_on:
+      - postgres
 
   celery_worker:
     image: celery_worker:latest
     environment:
-      - C_FORCE_ROOT=true
-    volumes:
-      - ./worker/:/mnt/
-    build: ./worker
+      C_FORCE_ROOT: true
+    build: ./celery_worker
     working_dir: /backend/
+    volumes:
+      - ./celery_worker/:/backend/
     command: celery -A worker.celery worker --pool=solo -l info
     container_name: celery_worker
     networks:
@@ -70,6 +109,7 @@ services:
     depends_on:
       - rabbitmq_broker
       - postgres
+      - ftp_server
 
   nginx_proxy:
     image: nginx:latest
@@ -82,7 +122,8 @@ services:
       - convert_network
     depends_on:
       # - mcs_auth
-      - mcs_tasks
+      - mcs_tasks_commands
+      - mcs_tasks_queries
       # - mcs_files        
 
 networks:

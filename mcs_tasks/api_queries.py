@@ -1,25 +1,26 @@
-from base import request, Resource, db, api, app, Task, jwt_required, task_schema
+from base import request, Resource, api, app, Task, jwt_required, tasks_schema
 
-
+# Clase que contiene la logica para consultar las tareas registradas
 class TaskListResource(Resource):
     @jwt_required()
     def get(self):
-        task = task_schema.dump(Task.query.all())
+        queryParams = request.args
+        tasks = tasks_schema.dump(Task.query.all())
         try:
-            if request.json["order"] == 1:
-                result_temp = sorted(task, key=lambda d: d["id"], reverse=True)
+            if int(queryParams['order']) == 1:
+                tasks = sorted(tasks, key=lambda d: d["id"], reverse=True)
             else:
-                result_temp = sorted(task, key=lambda d: d["id"], reverse=False)
-        except KeyError:
-            result_temp = task
+                tasks = sorted(tasks, key=lambda d: d["id"], reverse=False)
+            
+            if 'max' in queryParams:
+                tasks = tasks[: int(queryParams["max"])]
+            
+            return tasks                    
+        except Exception as e:
+            return {"msg": str(e)}, 500
 
-        try:
-            result = result_temp[: request.json["max"]]
-        except KeyError:
-            result = result_temp
-        return result
 
-
+# Agregamos los recursos
 api.add_resource(TaskListResource, "/api/tasks")
 
 

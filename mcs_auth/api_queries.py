@@ -1,32 +1,27 @@
-from base import User, request, Resource, db, api, app, hashlib, user_schema
+from base import User, request, Resource, api, app, hashlib, create_access_token
 
-class AuthSignUpResource(Resource):
+# Clase que contiene la logica para solicitar el token
+class AuthLogInResource(Resource):
     def post(self):
-        usuario = User.query.filter(User.username == request.json["username"]).first()
+        password_encriptada = hashlib.md5(
+            request.json["password"].encode("utf-8")
+        ).hexdigest()
+        usuario = User.query.filter(
+            User.username == request.json["username"],
+            User.password == password_encriptada,
+        ).first()
+        
         if usuario is None:
-            email = User.query.filter(User.email == request.json["email"]).first()
-            if email is None:
-                if request.json["password1"] == request.json["password2"]:
-                    password_encriptada = hashlib.md5(
-                        request.json["password1"].encode("utf-8")
-                    ).hexdigest()
-                    new_user = User(
-                        username=request.json["username"],
-                        password=password_encriptada,
-                        email=request.json["email"],
-                    )
-                    db.session.add(new_user)
-                    db.session.commit()
-                    return user_schema.dump(new_user)
-                else:
-                    return "El password no coincide", 409
-            else:
-                return "El email ya existe", 409
-        else:
-            return "El usuario ya existe", 409
+            return {"msg": "Usuario o contraseña invalida"}, 409
+        
+        token_de_acceso = create_access_token(identity=usuario.id)
+        return {
+            "msg": "Inicio de sesión exitoso",
+            "username": usuario.username,
+            "token": token_de_acceso,
+        }
 
-
-api.add_resource(AuthSignUpResource, "/api/auth/signup")
+api.add_resource(AuthLogInResource, "/api/auth/login")
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=6600)
+    app.run(debug=True, host="0.0.0.0", port=5000)
