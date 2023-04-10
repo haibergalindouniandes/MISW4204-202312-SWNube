@@ -23,22 +23,25 @@ def process_file(args):
         registry_log("INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
         registry_log("INFO", f"==> Tarea [{str(args)}]")
         message = args
+        # Validamos la tarea
+        updateTask = Task.query.filter(Task.id == int(message["id"])).first()
+        if updateTask is None:
+            raise Exception(f"La tarea [{message['id']}] fue eliminada")
         # Creamos directory temporal si no existe
         createTempDirectory()
         # Convertimos archivo
         compressFileAndUpload(message["file_origin_path"], message["file_name"],
                               message["file_format"], message["file_new_format"])
-        # Consultamos archivo y actualizamos
-        updateTask = Task.query.get_or_404(message["id"])
+        
         updateTask.updated = datetime.now()
         updateTask.file_convert_path = f"/{SHARED_PATH}/{COMPRESSED_PATH_FILES}/{message['file_name']}{message['file_new_format']}"
         updateTask.status = 'processed'
         db.session.commit()
         registry_log("INFO", f"==> Se actualiza la tarea en BD [{task_schema.dump(updateTask)}]")
-        registry_log("INFO", f"<=================== Fin del procesamiento de la tarea ===================>")
     except Exception as e:
         registry_log("ERROR", str(e))
-
+    finally:
+        registry_log("INFO", f"<=================== Fin del procesamiento de la tarea ===================>")
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):
