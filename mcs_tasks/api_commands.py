@@ -78,6 +78,7 @@ class ConvertTaskFileResource(Resource):
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
         except Exception as e:
             traceback.print_stack()
+            registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": str(e)}, 500
 
 
