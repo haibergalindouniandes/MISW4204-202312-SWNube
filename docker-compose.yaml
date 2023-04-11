@@ -50,7 +50,6 @@ services:
     working_dir: /backend/
     command: sh run_commands.sh
     container_name: mcs_auth_commands
-    restart: always
     networks:
       - convert_network
     depends_on:
