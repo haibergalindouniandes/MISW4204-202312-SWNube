@@ -26,7 +26,7 @@ def process_file(args):
         # Validamos la tarea
         updateTask = Task.query.filter(Task.id == int(message["id"])).first()
         if updateTask is None:
-            raise Exception(f"La tarea [{message['id']}] fue eliminada")
+            raise Exception(f"==> La tarea [{message['id']}] fue eliminada")
         # Creamos directory temporal si no existe
         createTempDirectory()
         # Convertimos archivo
