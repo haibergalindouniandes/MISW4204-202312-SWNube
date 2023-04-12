@@ -5,7 +5,7 @@ from base import db, Task, celery, ftplib, task_schema, os, tempfile, tarfile, p
 
 # Constantes
 PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=True)
-FTP_SERVER = os.getenv("FTP_SERVER", default="ftp_server")
+FTP_SERVER = os.getenv("FTP_SERVER", default="172.168.0.12")
 FTP_PORT = os.getenv("FTP_PORT", default=21)
 FTP_USER = os.getenv("FTP_USER", default="ftp_user")
 FTP_PASSWORD = os.getenv("FTP_PASSWORD", default="ftp_password")
