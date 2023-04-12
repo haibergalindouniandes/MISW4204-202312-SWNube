@@ -86,14 +86,21 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     # Creamos directorio temporal
     fileProcessed = None
     # Conectamos con el servidor FTP
+    # ftp_server = ftplib.FTP()
+    # registry_log("INFO", f"==> Se genera variable [ftp_server]")
+    # ftp_server.set_pasv(True)
+    # registry_log("INFO", f"==> Se define pasivo como [True]")
+    # ftp_server.connect(FTP_SERVER, FTP_PORT)
+    # registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
+    # ftp_server.login(FTP_USER, FTP_PASSWORD)
+    # registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
+    
+    
     ftp_server = ftplib.FTP()
-    registry_log("INFO", f"==> Se genera variable [ftp_server]")
-    ftp_server.set_pasv(True)
-    registry_log("INFO", f"==> Se define pasivo como [True]")
+    ftp_server.set_debuglevel(2)
     ftp_server.connect(FTP_SERVER, FTP_PORT)
-    registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
     ftp_server.login(FTP_USER, FTP_PASSWORD)
-    registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
+
     # force UTF-8 encoding
     ftp_server.encoding = FTP_ENCODING
     ftp_server.cwd(SHARED_PATH)
@@ -106,6 +113,7 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     # Descargamos el archivo original temporalmente
     with open(f"{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}", 'wb') as fileDownloaded:
         ftp_server.retrbinary(f"RETR /{filePath}", fileDownloaded.write)
+    ftp_server.close()
     registry_log("INFO", f"==> Se descarga temporalmente el archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}]")
     # Comprimimos el archivo
     if fileConverterExt.lower() == '.zip':
@@ -118,14 +126,21 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
         fileProcessed = compressInTbz(tempDir.name, fileName, originExt, fileConverterExt)
     # Subimos el archivo
     if fileProcessed:
-        ftp_server.cwd(COMPRESSED_PATH_FILES)
+        
+        ftp_server = ftplib.FTP()
+        ftp_server.set_debuglevel(2)
+        ftp_server.connect(FTP_SERVER, FTP_PORT)
+        ftp_server.login(FTP_USER, FTP_PASSWORD)
+        
+        
+        ftp_server.cwd(f"/{SHARED_PATH}/{COMPRESSED_PATH_FILES}")
         file = open(f"{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}", 'rb')
         ftp_server.storbinary(f"STOR {fileName}{fileConverterExt}", file)
         registry_log("INFO", f"==> Se sube archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}]")
         # Cerramos conexion FTP y la apertura del archivo
         file.close()
-    ftp_server.quit()
-    ftp_server.close()
+        ftp_server.quit()
+        ftp_server.close()
 
 # Funcion para comprimir en formato zip
 def compressInZip(filePath, fileName, originExt, fileConverterExt):
