@@ -1,8 +1,10 @@
 from ftplib import FTP_TLS
+import socket
 import ssl
 from base import db, Task, celery, ftplib, task_schema, os, tempfile, tarfile, py7zr, datetime, ZipFile, ZIP_DEFLATED
 
 # Constantes
+PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=False)
 FTP_SERVER = os.getenv("FTP_SERVER", default="172.168.0.12")
 FTP_PORT = os.getenv("FTP_PORT", default=21)
 FTP_USER = os.getenv("FTP_USER", default="ftp_user")
@@ -24,7 +26,8 @@ def process_file(args):
     try:
         registry_log("INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
         registry_log("INFO", f"==> Tarea [{str(args)}]")
-        registry_properties()
+        if PRINT_PROPERTIES:
+                registry_properties()
         message = args
         # Validamos la tarea
         updateTask = Task.query.filter(Task.id == int(message["id"])).first()
@@ -92,31 +95,11 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     # registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
     # ftp_server.login(FTP_USER, FTP_PASSWORD)
     # registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
-    
-    
-    ftp_server = FTP_TLS(FTP_SERVER)
-    registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}]")
-    ftp_server.port(FTP_PORT)
-    registry_log("INFO", f"==> Se conecta con el puerto al puerto [{FTP_PORT}] servidor FTP [{FTP_SERVER}]")
-    ftp_server.set_debuglevel(2)
-    ftp_server.ssl_version = ssl.PROTOCOL_TLS
-    ftp_server.set_pasv(True)
-    ftp_server.login(user=FTP_USER, passwd=FTP_PASSWORD)
-    registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
-    
-    # force UTF-8 encoding
-    ftp_server.encoding = FTP_ENCODING
-    ftp_server.cwd(SHARED_PATH)
-    registry_log("INFO", f"==> Se accede a la ruta [{SHARED_PATH}]")
-    # Validamos si existe el directorio file origin si no exite se crea
-    if not COMPRESSED_PATH_FILES in ftp_server.nlst():
-        # Create a new directory called foo on the server.
-        ftp_server.mkd(COMPRESSED_PATH_FILES)
-        registry_log("INFO", f"==> Se crea directorio [{COMPRESSED_PATH_FILES}]")
-    # Descargamos el archivo original temporalmente
-    with open(f"{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}", 'wb') as fileDownloaded:
-        ftp_server.retrbinary(f"RETR /{filePath}", fileDownloaded.write)
-    registry_log("INFO", f"==> Se descarga temporalmente el archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}]")
+   
+    # ftp_server.login(user=FTP_USER, passwd=FTP_PASSWORD)
+    # Descargamos el archivo
+    downloadFileFromServer(tempDir, fileName, originExt, filePath)
+
     # Comprimimos el archivo
     if fileConverterExt.lower() == '.zip':
         fileProcessed = compressInZip(tempDir.name, fileName, originExt, fileConverterExt)
@@ -126,16 +109,66 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
         fileProcessed = compressInTgz(tempDir.name, fileName, originExt, fileConverterExt)
     if fileConverterExt.lower() == '.tar.bz2':
         fileProcessed = compressInTbz(tempDir.name, fileName, originExt, fileConverterExt)
+
     # Subimos el archivo
     if fileProcessed:
-        ftp_server.cwd(COMPRESSED_PATH_FILES)
-        file = open(f"{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}", 'rb')
-        ftp_server.storbinary(f"STOR {fileName}{fileConverterExt}", file)
-        registry_log("INFO", f"==> Se sube archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}]")
-        # Cerramos conexion FTP y la apertura del archivo
-        ftp_server.quit()
-        file.close()
+        updaloadFileToServer(tempDir, fileName, fileConverterExt)
 
+
+# Funcion quer permite realizar la conexion con el servidor FTP
+def connectFtp():
+    ftp_server = ftplib.FTP()
+    # ftp_server.ssl_version = ssl.PROTOCOL_TLSv1_2
+    ftp_server.connect(FTP_SERVER, FTP_PORT)
+    registry_log("INFO", f"==> Se conecta con al puerto [{FTP_PORT}] servidor FTP [{FTP_SERVER}]")
+    ftp_server.login(FTP_USER, FTP_PASSWORD)
+    # ftp_server.prot_p()
+    ftp_server.af = socket.AF_INET6
+    # ftp_server.set_pasv(False)
+    # force UTF-8 encoding
+    # ftp_server.encoding = FTP_ENCODING
+    
+    
+    registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
+    ftp_server.set_debuglevel(2)
+    return ftp_server
+
+# Funcion quer permite realizar la descarga de archivos del servidor FTP
+def downloadFileFromServer(tempDir, fileName, originExt, filePath):
+    ftp_server = connectFtp()
+    ftp_server.cwd(SHARED_PATH)
+    registry_log("INFO", f"==> Se accede a la ruta [{SHARED_PATH}]")
+    
+    # Descargamos el archivo original temporalmente
+    with open(f"{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}", 'wb') as fileDownloaded:
+        ftp_server.retrbinary(f"RETR /{filePath}", fileDownloaded.write)
+    closeConnectionServer(ftp_server)
+    registry_log("INFO", f"==> Se descarga temporalmente el archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}]")
+
+# Funcion quer permite realizar la descarga de archivos del servidor FTP
+def updaloadFileToServer(tempDir, fileName, fileConverterExt):
+    ftp_server = connectFtp()
+    ftp_server.cwd(SHARED_PATH)
+    # Validamos si existe el directorio file origin si no exite se crea
+    if not COMPRESSED_PATH_FILES in ftp_server.nlst():
+        # Create a new directory called foo on the server.
+        ftp_server.mkd(COMPRESSED_PATH_FILES)
+        registry_log("INFO", f"==> Se crea directorio [{COMPRESSED_PATH_FILES}]")
+    
+    ftp_server.cwd(COMPRESSED_PATH_FILES)
+    file = open(f"{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}", 'rb')
+    ftp_server.storbinary(f"STOR {fileName}{fileConverterExt}", file)
+    registry_log("INFO", f"==> Se sube archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}]")
+    # Cerramos conexion FTP y la apertura del archivo
+    closeConnectionServer(ftp_server)
+    file.close()
+ 
+ # Funcion quer permite realizar el cierre de conexiones del servidor FTP
+def closeConnectionServer(ftp_server):
+    ftp_server.quit()
+    ftp_server.close()
+    registry_log("INFO", f"==> Se cierra la conexion con el servidor FTP")
+    
 # Funcion para comprimir en formato zip
 def compressInZip(filePath, fileName, originExt, fileConverterExt):
     registry_log("INFO", f"==> Inicia conversion en ZIP")
