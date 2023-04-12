@@ -1,6 +1,7 @@
 from base import request, Resource, db, api, app, Task, jwt_required, task_schema, celery, ftplib, datetime, re, traceback, os
 
 # Constantes
+PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=False)
 SHARED_PATH = os.getenv("SHARED_PATH", default="shared")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
@@ -19,8 +20,9 @@ class ConvertTaskFileResource(Resource):
     def post(self):
         try:
             registry_log("INFO", f"<=================== Inicio de la creación de la tarea ===================>")
-            # Propiedades
-            registry_properties()
+            # Validamos si se debe imprimir las propiedades
+            if PRINT_PROPERTIES:
+                registry_properties()
             # Validacion de parametros de entrada
             if not 'fileName' in request.files:
                 return {"msg": "Parámetros de entrada invalidos. El parámetro 'fileName' es obligatorio."}, 400
