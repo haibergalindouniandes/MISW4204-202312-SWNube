@@ -1,4 +1,4 @@
-from base import request, Resource, api, app, Task, jwt_required, tasks_schema
+from base import request, Resource, api, app, Task, jwt_required, tasks_schema, task_schema
 
 # Clase que contiene la logica para consultar las tareas registradas
 class TaskListResource(Resource):
@@ -20,8 +20,14 @@ class TaskListResource(Resource):
             return {"msg": str(e)}, 500
 
 
+class TaskIdResource(Resource):
+    @jwt_required()
+    def get(self, id_task):
+        return task_schema.dump(Task.query.get_or_404(id_task))
+
 # Agregamos los recursos
 api.add_resource(TaskListResource, "/api/tasks")
+api.add_resource(TaskIdResource, "/api/tasks/<int:id_task>")
 
 
 if __name__ == "__main__":

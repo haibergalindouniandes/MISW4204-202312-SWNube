@@ -1,0 +1,5 @@
+[INFO]-[2023-04-12 01:40:02.026825]-[<=================== Inicio del procesamiento de la tarea ===================>]
+[INFO]-[2023-04-12 01:40:02.044386]-[==> Tarea [{'file_format': '.txt', 'updated': None, 'file_convert_path': None, 'status': 'uploaded', 'timestamp': '2023-04-12T01:40:00.979769', 'file_name': 'encoded-20230406005555', 'file_origin_path': '/shared/origin_files/encoded-20230406005555.txt', 'file_new_format': '.zip', 'mimetype': 'text/plain', 'id': 1}]]
+[INFO]-[2023-04-12 01:40:02.105902]-[==> Directorio temporal creado [/backend/tmp/tmplq_eltrg]]
+[ERROR]-[2023-04-12 01:40:02.126847]-[[Errno 111] Connection refused]
+[INFO]-[2023-04-12 01:40:02.154416]-[<=================== Fin del procesamiento de la tarea ===================>]
