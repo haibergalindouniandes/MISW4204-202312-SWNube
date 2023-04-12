@@ -124,7 +124,8 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
         registry_log("INFO", f"==> Se sube archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}]")
         # Cerramos conexion FTP y la apertura del archivo
         file.close()
-        ftp_server.close()
+    ftp_server.quit()
+    ftp_server.close()
 
 # Funcion para comprimir en formato zip
 def compressInZip(filePath, fileName, originExt, fileConverterExt):
