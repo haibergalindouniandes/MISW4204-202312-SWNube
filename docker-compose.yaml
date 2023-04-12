@@ -111,7 +111,6 @@ services:
     image: celery_worker:latest
     environment:
       - C_FORCE_ROOT=true
-      - FTP_SERVER=172.168.0.12 
     build: ./celery_worker
     working_dir: /backend/
     volumes:
@@ -138,6 +137,9 @@ services:
     networks:
       - convert_network
     depends_on:
+      - postgres
+      - rabbitmq_broker
+      - ftp_server
       - mcs_auth_commands
       - mcs_auth_queries
       - mcs_tasks_commands
