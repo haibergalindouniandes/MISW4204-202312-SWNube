@@ -80,7 +80,8 @@ class ConvertTaskFileResource(Resource):
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
         except Exception as e:
             traceback.print_stack()
-            registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
+            registry_log("ERROR", f"==> {str(e)}")
+            registry_log("ERROR", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": str(e)}, 500
 
 
@@ -97,6 +98,7 @@ def registry_properties():
     registry_log("INFO", f"==> FTP_PASSWORD={FTP_PASSWORD}")
     registry_log("INFO", f"==> FTP_ENCODING={FTP_ENCODING}")
     registry_log("INFO", f"==> LOG_FILE={LOG_FILE}")
+    registry_log("INFO", f"==> Fin Propiedades del sistema")
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):

@@ -40,7 +40,7 @@ def process_file(args):
         db.session.commit()
         registry_log("INFO", f"==> Se actualiza la tarea en BD [{task_schema.dump(updateTask)}]")
     except Exception as e:
-        registry_log("ERROR", str(e))
+        registry_log("ERROR", f"==> {str(e)}")
     finally:
         registry_log("INFO", f"<=================== Fin del procesamiento de la tarea ===================>")
 
@@ -48,7 +48,6 @@ def process_file(args):
 def registry_properties():
     registry_log("INFO", f"==> Propiedades del sistema:")
     registry_log("INFO", f"==> SHARED_PATH={SHARED_PATH}")
-    registry_log("INFO", f"==> ORIGIN_PATH_FILES={ORIGIN_PATH_FILES}")
     registry_log("INFO", f"==> ORIGIN_PATH_FILES={ORIGIN_PATH_FILES}")
     registry_log("INFO", f"==> COMPRESSED_PATH_FILES={COMPRESSED_PATH_FILES}")
     registry_log("INFO", f"==> SEPARATOR_SO={SEPARATOR_SO}")
@@ -61,6 +60,7 @@ def registry_properties():
     registry_log("INFO", f"==> FTP_PASSWORD={FTP_PASSWORD}")
     registry_log("INFO", f"==> FTP_ENCODING={FTP_ENCODING}")
     registry_log("INFO", f"==> LOG_FILE={LOG_FILE}")
+    registry_log("INFO", f"==> Fin Propiedades del sistema")
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):
@@ -87,10 +87,11 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     ftp_server = ftplib.FTP()
     ftp_server.connect(FTP_SERVER, FTP_PORT)
     ftp_server.login(FTP_USER, FTP_PASSWORD)
+    registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
     # force UTF-8 encoding
     ftp_server.encoding = FTP_ENCODING
     ftp_server.cwd(SHARED_PATH)
-    registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}] y se accede a [{SHARED_PATH}]")
+    registry_log("INFO", f"==> Se accede a la ruta [{SHARED_PATH}]")
     # Validamos si existe el directorio file origin si no exite se crea
     if not COMPRESSED_PATH_FILES in ftp_server.nlst():
         # Create a new directory called foo on the server.
