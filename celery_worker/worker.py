@@ -87,9 +87,7 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     fileProcessed = None
     # Conectamos con el servidor FTP
     ftp_server = ftplib.FTP()
-    registry_log("INFO", f"==> Se genera variable [ftp_server]")
-    ftp_server.set_pasv(True)
-    registry_log("INFO", f"==> Se define pasivo como [True]")
+    ftp_server.set_pasv(False)
     ftp_server.connect(FTP_SERVER, FTP_PORT)
     registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
     ftp_server.login(FTP_USER, FTP_PASSWORD)
