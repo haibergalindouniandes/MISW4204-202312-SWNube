@@ -4,7 +4,7 @@ import ssl
 from base import db, Task, celery, ftplib, task_schema, os, tempfile, tarfile, py7zr, datetime, ZipFile, ZIP_DEFLATED
 
 # Constantes
-PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=False)
+PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=True)
 FTP_SERVER = os.getenv("FTP_SERVER", default="ftp_server")
 FTP_PORT = os.getenv("FTP_PORT", default=21)
 FTP_USER = os.getenv("FTP_USER", default="ftp_user")
