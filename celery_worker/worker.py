@@ -22,6 +22,7 @@ def process_file(args):
     try:
         registry_log("INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
         registry_log("INFO", f"==> Tarea [{str(args)}]")
+        registry_properties()
         message = args
         # Validamos la tarea
         updateTask = Task.query.filter(Task.id == int(message["id"])).first()
@@ -42,6 +43,24 @@ def process_file(args):
         registry_log("ERROR", str(e))
     finally:
         registry_log("INFO", f"<=================== Fin del procesamiento de la tarea ===================>")
+
+# Funcion para registrar propiedades
+def registry_properties():
+    registry_log("INFO", f"==> Propiedades del sistema:")
+    registry_log("INFO", f"==> SHARED_PATH={SHARED_PATH}")
+    registry_log("INFO", f"==> ORIGIN_PATH_FILES={ORIGIN_PATH_FILES}")
+    registry_log("INFO", f"==> ORIGIN_PATH_FILES={ORIGIN_PATH_FILES}")
+    registry_log("INFO", f"==> COMPRESSED_PATH_FILES={COMPRESSED_PATH_FILES}")
+    registry_log("INFO", f"==> SEPARATOR_SO={SEPARATOR_SO}")
+    registry_log("INFO", f"==> HOME_PATH={HOME_PATH}")
+    registry_log("INFO", f"==> TMP_PATH={TMP_PATH}")
+    registry_log("INFO", f"==> CELERY_TASK_NAME={CELERY_TASK_NAME}")
+    registry_log("INFO", f"==> FTP_SERVER={FTP_SERVER}")
+    registry_log("INFO", f"==> FTP_PORT={FTP_PORT}")
+    registry_log("INFO", f"==> FTP_USER={FTP_USER}")
+    registry_log("INFO", f"==> FTP_PASSWORD={FTP_PASSWORD}")
+    registry_log("INFO", f"==> FTP_ENCODING={FTP_ENCODING}")
+    registry_log("INFO", f"==> LOG_FILE={LOG_FILE}")
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):
@@ -71,7 +90,7 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     # force UTF-8 encoding
     ftp_server.encoding = FTP_ENCODING
     ftp_server.cwd(SHARED_PATH)
-    registry_log("INFO", f"==> Se crea conexion con el servidor FTP y se accede a [{SHARED_PATH}]")
+    registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}] y se accede a [{SHARED_PATH}]")
     # Validamos si existe el directorio file origin si no exite se crea
     if not COMPRESSED_PATH_FILES in ftp_server.nlst():
         # Create a new directory called foo on the server.

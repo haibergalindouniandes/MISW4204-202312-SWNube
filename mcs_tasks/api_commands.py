@@ -19,6 +19,8 @@ class ConvertTaskFileResource(Resource):
     def post(self):
         try:
             registry_log("INFO", f"<=================== Inicio de la creación de la tarea ===================>")
+            # Propiedades
+            registry_properties()
             # Validacion de parametros de entrada
             if not 'fileName' in request.files:
                 return {"msg": "Parámetros de entrada invalidos. El parámetro 'fileName' es obligatorio."}, 400
@@ -44,7 +46,7 @@ class ConvertTaskFileResource(Resource):
             # force UTF-8 encoding
             ftp_server.encoding = FTP_ENCODING
             ftp_server.cwd(SHARED_PATH)
-            registry_log("INFO", f"==> Se crea conexion con el servidor FTP y se accede a [{SHARED_PATH}]")
+            registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}] y se accede a [{SHARED_PATH}]")
             # Validamos si no existe el directorio file origin
             if not ORIGIN_PATH_FILES in ftp_server.nlst():
                 # Creamos el directorio file origin
@@ -81,6 +83,20 @@ class ConvertTaskFileResource(Resource):
             registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": str(e)}, 500
 
+
+# Funcion para registrar propiedades
+def registry_properties():
+    registry_log("INFO", f"==> Propiedades del sistema:")
+    registry_log("INFO", f"==> SHARED_PATH={SHARED_PATH}")
+    registry_log("INFO", f"==> ORIGIN_PATH_FILES={ORIGIN_PATH_FILES}")
+    registry_log("INFO", f"==> ALLOWED_EXTENSIONS={ALLOWED_EXTENSIONS}")
+    registry_log("INFO", f"==> EXP_REG_SANITIZATE={EXP_REG_SANITIZATE}")
+    registry_log("INFO", f"==> FTP_SERVER={FTP_SERVER}")
+    registry_log("INFO", f"==> FTP_PORT={FTP_PORT}")
+    registry_log("INFO", f"==> FTP_USER={FTP_USER}")
+    registry_log("INFO", f"==> FTP_PASSWORD={FTP_PASSWORD}")
+    registry_log("INFO", f"==> FTP_ENCODING={FTP_ENCODING}")
+    registry_log("INFO", f"==> LOG_FILE={LOG_FILE}")
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):
