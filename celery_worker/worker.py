@@ -118,7 +118,7 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
 # Funcion quer permite realizar la conexion con el servidor FTP
 def connectFtp():
     ftp_server = ftplib.FTP()
-    # ftp_server.ssl_version = ssl.PROTOCOL_TLSv1_2
+    # ftp_server.ssl_version = ssl.PROTOCOL_TLS
     ftp_server.connect(FTP_SERVER, FTP_PORT)
     registry_log("INFO", f"==> Se conecta con al puerto [{FTP_PORT}] servidor FTP [{FTP_SERVER}]")
     ftp_server.login(FTP_USER, FTP_PASSWORD)
