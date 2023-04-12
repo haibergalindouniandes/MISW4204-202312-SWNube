@@ -12,7 +12,8 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - convert_network  
+      convert_network:
+        ipv4_address: 172.168.0.10 
   
   rabbitmq_broker:
     build:
@@ -24,7 +25,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     networks:
-      - convert_network
+      convert_network:
+        ipv4_address: 172.168.0.11
 
   ftp_server:
     container_name: ftp_server
@@ -39,7 +41,8 @@ services:
     volumes:
       - ./shared:/home/ftp_user/shared
     networks:
-      - convert_network
+      convert_network:
+        ipv4_address: 172.168.0.12
 
   mcs_auth_commands:
     restart: always
@@ -51,7 +54,8 @@ services:
     command: sh run_commands.sh
     container_name: mcs_auth_commands
     networks:
-      - convert_network
+      convert_network:
+        ipv4_address: 172.168.0.13
     depends_on:
       - postgres
 
@@ -71,6 +75,8 @@ services:
 
   mcs_tasks_commands:
     image: mcs_tasks:latest
+    environment:
+      - FTP_SERVER=172.168.0.12     
     volumes:
       - ./mcs_tasks/:/backend/
     build: ./mcs_tasks
@@ -79,7 +85,8 @@ services:
     container_name: mcs_tasks_commands
     restart: always
     networks:
-      - convert_network
+      convert_network:
+        ipv4_address: 172.168.0.14
     depends_on:
       - postgres
       - rabbitmq_broker
@@ -95,7 +102,8 @@ services:
     container_name: mcs_tasks_queries
     restart: always
     networks:
-      - convert_network
+      convert_network:
+        ipv4_address: 172.168.0.15
     depends_on:
       - postgres
 
@@ -103,6 +111,7 @@ services:
     image: celery_worker:latest
     environment:
       - C_FORCE_ROOT=true
+      - FTP_SERVER=172.168.0.12 
     build: ./celery_worker
     working_dir: /backend/
     volumes:
@@ -111,7 +120,8 @@ services:
     container_name: celery_worker
     restart: always
     networks:
-      - convert_network
+      convert_network:
+        ipv4_address: 172.168.0.16
     depends_on:
       - postgres
       - rabbitmq_broker
@@ -137,3 +147,6 @@ services:
 networks:
   convert_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.168.0.0/24
