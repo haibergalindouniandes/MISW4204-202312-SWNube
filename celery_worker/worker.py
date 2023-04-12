@@ -86,8 +86,8 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     # Conectamos con el servidor FTP
     ftp_server = ftplib.FTP()
     ftp_server.connect(FTP_SERVER, FTP_PORT)
-    ftp_server.login(FTP_USER, FTP_PASSWORD)
     registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
+    ftp_server.login(FTP_USER, FTP_PASSWORD)
     # force UTF-8 encoding
     ftp_server.encoding = FTP_ENCODING
     ftp_server.cwd(SHARED_PATH)
