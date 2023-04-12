@@ -94,18 +94,6 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
     ftp_server.login(FTP_USER, FTP_PASSWORD)
     registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
-    
-    
-    # ftp_server = FTP_TLS(FTP_SERVER)
-    # registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}]")
-    # ftp_server.port(FTP_PORT)
-    # registry_log("INFO", f"==> Se conecta con el puerto al puerto [{FTP_PORT}] servidor FTP [{FTP_SERVER}]")
-    # ftp_server.set_debuglevel(2)
-    # ftp_server.ssl_version = ssl.PROTOCOL_TLS
-    # ftp_server.set_pasv(True)
-    # ftp_server.login(user=FTP_USER, passwd=FTP_PASSWORD)
-    # registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
-    
     # force UTF-8 encoding
     ftp_server.encoding = FTP_ENCODING
     ftp_server.cwd(SHARED_PATH)
@@ -135,8 +123,8 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
         ftp_server.storbinary(f"STOR {fileName}{fileConverterExt}", file)
         registry_log("INFO", f"==> Se sube archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{fileConverterExt}]")
         # Cerramos conexion FTP y la apertura del archivo
-        ftp_server.quit()
         file.close()
+        ftp_server.close()
 
 # Funcion para comprimir en formato zip
 def compressInZip(filePath, fileName, originExt, fileConverterExt):
