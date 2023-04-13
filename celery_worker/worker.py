@@ -4,7 +4,7 @@ import ssl
 from base import db, Task, celery, ftplib, task_schema, os, tempfile, tarfile, py7zr, datetime, ZipFile, ZIP_DEFLATED
 
 # Constantes
-PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=True)
+PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=False)
 FTP_SERVER = os.getenv("FTP_SERVER", default="172.168.0.12")
 FTP_PORT = os.getenv("FTP_PORT", default=21)
 FTP_USER = os.getenv("FTP_USER", default="ftp_user")
@@ -88,18 +88,8 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
     registry_log("INFO", f"==> Directorio temporal creado [{tempDir.name}]")
     # Creamos directorio temporal
     fileProcessed = None
-    # Conectamos con el servidor FTP
-    # ftp_server = ftplib.FTP()
-    # ftp_server.set_pasv(False)
-    # ftp_server.connect(FTP_SERVER, FTP_PORT)
-    # registry_log("INFO", f"==> Se crea conexion con el servidor FTP [HOST={FTP_SERVER}, PORT={FTP_PORT}]")
-    # ftp_server.login(FTP_USER, FTP_PASSWORD)
-    # registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
-   
-    # ftp_server.login(user=FTP_USER, passwd=FTP_PASSWORD)
     # Descargamos el archivo
     downloadFileFromServer(tempDir, fileName, originExt, filePath)
-
     # Comprimimos el archivo
     if fileConverterExt.lower() == '.zip':
         fileProcessed = compressInZip(tempDir.name, fileName, originExt, fileConverterExt)
@@ -109,7 +99,6 @@ def compressFileAndUpload(filePath, fileName, originExt, fileConverterExt):
         fileProcessed = compressInTgz(tempDir.name, fileName, originExt, fileConverterExt)
     if fileConverterExt.lower() == '.tar.bz2':
         fileProcessed = compressInTbz(tempDir.name, fileName, originExt, fileConverterExt)
-
     # Subimos el archivo
     if fileProcessed:
         updaloadFileToServer(tempDir, fileName, fileConverterExt)
@@ -120,15 +109,10 @@ def connectFtp():
     ftp_server = ftplib.FTP()
     # ftp_server.ssl_version = ssl.PROTOCOL_TLS
     ftp_server.connect(FTP_SERVER, FTP_PORT)
-    registry_log("INFO", f"==> Se conecta con al puerto [{FTP_PORT}] servidor FTP [{FTP_SERVER}]")
+    registry_log("INFO", f"==> Se conecta al puerto [{FTP_PORT}] del servidor FTP [{FTP_SERVER}]")
     ftp_server.login(FTP_USER, FTP_PASSWORD)
     # ftp_server.prot_p()
     ftp_server.af = socket.AF_INET6
-    # ftp_server.set_pasv(False)
-    # force UTF-8 encoding
-    # ftp_server.encoding = FTP_ENCODING
-    
-    
     registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
     ftp_server.set_debuglevel(2)
     return ftp_server
