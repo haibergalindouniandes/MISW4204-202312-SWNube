@@ -79,3 +79,6 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
     ```
     sudo docker-compose up
     ```
+23. Una vez termine la instalación se debera ver la consola de la siguiente manera, lo que indicará que ya esta listo para recibir peticiones.
+    
+   <img src="https://user-images.githubusercontent.com/110913673/231844481-f3638266-e68b-42c0-bc36-129294961708.png" alt="Direccion_IP_VM" style="zoom:75%;" />
