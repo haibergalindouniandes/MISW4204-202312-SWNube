@@ -19,16 +19,18 @@ import py7zr
 import zlib
 import re
 import os
+import socket
 
 # Constantes
 POSTGRES_USER = os.getenv("POSTGRES_USER", default="dbuser")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", default="dbpass")
 POSTGRES_DB = os.getenv("POSTGRES_DB", default="dbconvert")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", default="172.168.0.10")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", default=5432)
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", default="JwBGj2B4XFAKhYmn8Pgk0vH2w7UvgYfXAJ32e5rs8vI=")
 RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
 RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
-RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
+RABBIT_HOST = os.getenv("RABBIT_HOST", default="172.168.0.11")
 RABBIT_PORT = os.getenv("RABBIT_PORT", default=5672)
 RABBIT_VHOST = os.getenv("RABBIT_VHOST", default="vhost_converter")
 CELERY_NAME_APP = os.getenv("CELERY_NAME_APP", default="converter_app")
@@ -36,7 +38,7 @@ ACCEPT_CONTENT = os.getenv("ACEPT_CONTENT", default=["json", "pickle", "yaml"])
 
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@postgres:{POSTGRES_PORT}/{POSTGRES_DB}"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PROPAGATE_EXCEPTIONS"] = True
 app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY

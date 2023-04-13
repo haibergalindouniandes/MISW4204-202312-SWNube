@@ -30,16 +30,18 @@ services:
 
   ftp_server:
     container_name: ftp_server
-    image: garethflowers/ftp-server
+    image: stilliard/pure-ftpd:hardened
     environment:
-      - FTP_USER=ftp_user
-      - FTP_PASS=ftp_password
+      - PUBLICHOST=0.0.0.0
+      - FTP_USER_NAME=converteruser
+      - FTP_USER_PASS=Converter2023
+      - FTP_USER_HOME=/home/converteruser/shared
     restart: always
     ports:
-      - '20-21:20-21/tcp'
-      - '40000-40009:40000-40009/tcp'
+      - '21:21'
+      - '30000-30009:30000-30009'
     volumes:
-      - ./shared:/home/ftp_user/shared
+      - ./ftp:/home/converteruser/shared
     networks:
       convert_network:
         ipv4_address: 172.168.0.12

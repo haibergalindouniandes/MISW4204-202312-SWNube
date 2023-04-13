@@ -1,15 +1,11 @@
-from ftplib import FTP_TLS
-import socket
-import ssl
-from base import db, Task, celery, ftplib, task_schema, os, tempfile, tarfile, py7zr, datetime, ZipFile, ZIP_DEFLATED
+from base import db, Task, celery, ftplib, task_schema, os, tempfile, tarfile, py7zr, datetime, ZipFile, ZIP_DEFLATED, socket
 
 # Constantes
 PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=False)
 FTP_SERVER = os.getenv("FTP_SERVER", default="172.168.0.12")
 FTP_PORT = os.getenv("FTP_PORT", default=21)
-FTP_USER = os.getenv("FTP_USER", default="ftp_user")
-FTP_PASSWORD = os.getenv("FTP_PASSWORD", default="ftp_password")
-FTP_ENCODING = os.getenv("FTP_ENCODING", default="utf-8")
+FTP_USER = os.getenv("FTP_USER", default="converteruser")
+FTP_PASSWORD = os.getenv("FTP_PASSWORD", default="Converter2023")
 SHARED_PATH = os.getenv("SHARED_PATH", default="shared")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 COMPRESSED_PATH_FILES = os.getenv("COMPRESSED_PATH_FILES", default="compressed_files")
@@ -23,22 +19,23 @@ HOME_PATH = os.getcwd()
 # Funcion para el procesamiento de los archivos
 @celery.task(name=CELERY_TASK_NAME)
 def process_file(args):
+    message = args
     try:
         registry_log("INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
         registry_log("INFO", f"==> Tarea [{str(args)}]")
         if PRINT_PROPERTIES:
-                registry_properties()
-        message = args
+            registry_properties()
+                
         # Validamos la tarea
         updateTask = Task.query.filter(Task.id == int(message["id"])).first()
         if updateTask is None:
             raise Exception(f"==> La tarea [{message['id']}] fue eliminada")
         # Creamos directory temporal si no existe
         createTempDirectory()
-        # Convertimos archivo
+        # Convertimos archivo y lo subimos al servidor
         compressFileAndUpload(message["file_origin_path"], message["file_name"],
                               message["file_format"], message["file_new_format"])
-        
+        # Actualizamos tarea en BD
         updateTask.updated = datetime.now()
         updateTask.file_convert_path = f"/{SHARED_PATH}/{COMPRESSED_PATH_FILES}/{message['file_name']}{message['file_new_format']}"
         updateTask.status = 'processed'
@@ -48,6 +45,7 @@ def process_file(args):
         registry_log("ERROR", f"==> {str(e)}")
     finally:
         registry_log("INFO", f"<=================== Fin del procesamiento de la tarea ===================>")
+
 
 # Funcion para registrar propiedades
 def registry_properties():
@@ -63,7 +61,6 @@ def registry_properties():
     registry_log("INFO", f"==> FTP_PORT={FTP_PORT}")
     registry_log("INFO", f"==> FTP_USER={FTP_USER}")
     registry_log("INFO", f"==> FTP_PASSWORD={FTP_PASSWORD}")
-    registry_log("INFO", f"==> FTP_ENCODING={FTP_ENCODING}")
     registry_log("INFO", f"==> LOG_FILE={LOG_FILE}")
     registry_log("INFO", f"==> Fin Propiedades del sistema")
 
@@ -120,18 +117,26 @@ def connectFtp():
 # Funcion quer permite realizar la descarga de archivos del servidor FTP
 def downloadFileFromServer(tempDir, fileName, originExt, filePath):
     ftp_server = connectFtp()
+    # Validamos si no existe el directorio shared
+    if not SHARED_PATH in ftp_server.nlst():
+        # Creamos el directorio file origin
+        ftp_server.mkd(SHARED_PATH)
+        registry_log("INFO", f"==> Se crea directorio [{SHARED_PATH}]")
     ftp_server.cwd(SHARED_PATH)
-    registry_log("INFO", f"==> Se accede a la ruta [{SHARED_PATH}]")
-    
     # Descargamos el archivo original temporalmente
     with open(f"{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}", 'wb') as fileDownloaded:
         ftp_server.retrbinary(f"RETR /{filePath}", fileDownloaded.write)
     closeConnectionServer(ftp_server)
     registry_log("INFO", f"==> Se descarga temporalmente el archivo [{tempDir.name}{SEPARATOR_SO}{fileName}{originExt}]")
 
-# Funcion quer permite realizar la descarga de archivos del servidor FTP
+# Funcion que permite realizar la descarga de archivos del servidor FTP
 def updaloadFileToServer(tempDir, fileName, fileConverterExt):
     ftp_server = connectFtp()
+    # Validamos si no existe el directorio shared
+    if not SHARED_PATH in ftp_server.nlst():
+        # Creamos el directorio file origin
+        ftp_server.mkd(SHARED_PATH)
+        registry_log("INFO", f"==> Se crea directorio [{SHARED_PATH}]")
     ftp_server.cwd(SHARED_PATH)
     # Validamos si existe el directorio file origin si no exite se crea
     if not COMPRESSED_PATH_FILES in ftp_server.nlst():
@@ -147,7 +152,7 @@ def updaloadFileToServer(tempDir, fileName, fileConverterExt):
     closeConnectionServer(ftp_server)
     file.close()
  
- # Funcion quer permite realizar el cierre de conexiones del servidor FTP
+# Funcion que permite realizar el cierre de conexiones del servidor FTP
 def closeConnectionServer(ftp_server):
     ftp_server.quit()
     ftp_server.close()

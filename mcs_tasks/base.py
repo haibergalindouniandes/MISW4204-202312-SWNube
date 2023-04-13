@@ -14,6 +14,7 @@ from marshmallow import fields, Schema
 from celery import Celery
 import ftplib
 import psycopg2
+import socket
 
 # Constantes
 POSTGRES_USER = os.getenv("POSTGRES_USER", default="dbuser")
