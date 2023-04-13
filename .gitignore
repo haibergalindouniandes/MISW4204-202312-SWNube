@@ -1,6 +1,8 @@
 # Customizated
-shared/
-**/log_*
+ftp/
+log_worker.txt
+log_tasks.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,16 +1,17 @@
-from base import request, Resource, db, api, app, Task, jwt_required, task_schema, celery, ftplib, datetime, re, traceback, os
+from base import request, Resource, db, api, app, Task, jwt_required, task_schema, celery, ftplib, datetime, re, traceback, os, socket
 
 # Constantes
+PRINT_PROPERTIES = os.getenv("PRINT_PROPERTIES", default=False)
 SHARED_PATH = os.getenv("SHARED_PATH", default="shared")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
 EXP_REG_SANITIZATE = os.getenv("EXP_REG_SANITIZATE", default="[^-a-zA-Z0-9_.]+")
-FTP_SERVER = os.getenv("FTP_SERVER", default="ftp_server")
+FTP_SERVER = os.getenv("FTP_SERVER", default="172.168.0.12")
 FTP_PORT = os.getenv("FTP_PORT", default=21)
-FTP_USER = os.getenv("FTP_USER", default="ftp_user")
-FTP_PASSWORD = os.getenv("FTP_PASSWORD", default="ftp_password")
-FTP_ENCODING = os.getenv("FTP_ENCODING", default="utf-8")
+FTP_USER = os.getenv("FTP_USER", default="converteruser")
+FTP_PASSWORD = os.getenv("FTP_PASSWORD", default="Converter2023")
 LOG_FILE = os.getenv("LOG_FILE", default="log_tasks.txt")
+CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
 
 
 # Clase que contiene la logica para registrar tareas de conversión
@@ -19,6 +20,9 @@ class ConvertTaskFileResource(Resource):
     def post(self):
         try:
             registry_log("INFO", f"<=================== Inicio de la creación de la tarea ===================>")
+            # Validamos si se debe imprimir las propiedades
+            if PRINT_PROPERTIES:
+                registry_properties()
             # Validacion de parametros de entrada
             if not 'fileName' in request.files:
                 return {"msg": "Parámetros de entrada invalidos. El parámetro 'fileName' es obligatorio."}, 400
@@ -37,32 +41,15 @@ class ConvertTaskFileResource(Resource):
             registry_log("INFO", f"==> Nombre original del archivo recibido [{dataFile}]")
             fileNameSanitized = re.sub(EXP_REG_SANITIZATE, '', dataFile)
             registry_log("INFO", f"==> Nombre sanitizado del archivo recibido [{fileNameSanitized}]")
-            # Conectamos con el servidor FTP
-            ftp_server = ftplib.FTP()
-            ftp_server.connect(FTP_SERVER, FTP_PORT)
-            ftp_server.login(FTP_USER, FTP_PASSWORD)
-            # force UTF-8 encoding
-            ftp_server.encoding = FTP_ENCODING
-            ftp_server.cwd(SHARED_PATH)
-            registry_log("INFO", f"==> Se crea conexion con el servidor FTP y se accede a [{SHARED_PATH}]")
-            # Validamos si no existe el directorio file origin
-            if not ORIGIN_PATH_FILES in ftp_server.nlst():
-                # Creamos el directorio file origin
-                ftp_server.mkd(ORIGIN_PATH_FILES)
-                registry_log("INFO", f"==> Se crea directorio [{ORIGIN_PATH_FILES}]")
-            ftp_server.cwd(ORIGIN_PATH_FILES)
-            # Subimos el archivo
-            ftp_server.storbinary(f"STOR {fileNameSanitized}", file)
-            # Cerramos conexion
-            ftp_server.quit()
-
+            # Subimos el archivo 
+            updaloadFileToServer(file, fileNameSanitized)    
             fileOriginPath = f"/{SHARED_PATH}/{ORIGIN_PATH_FILES}/{fileNameSanitized}"
             registry_log("INFO", f"==> Path sanitizado [{fileOriginPath}]")
             # Guardamos la informacion del archivo
             fileName = fileNameSanitized.rsplit('.', 1)[0]
             dataFile = dataFile.split('.')
             fileFormat = dataFile[-1]
-            # Guardamos en base de datos la tarea
+            # Registramos tarea en BD
             newTask = Task(file_name=fileName, file_format=f".{fileFormat}",
                            file_new_format=formatHomologation(fileNewFormat),
                            file_origin_path=fileOriginPath, status='uploaded',
@@ -78,9 +65,64 @@ class ConvertTaskFileResource(Resource):
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
         except Exception as e:
             traceback.print_stack()
-            registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
+            registry_log("ERROR", f"==> {str(e)}")
+            registry_log("ERROR", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": str(e)}, 500
 
+
+# Funcion que permite realizar la conexion con el servidor FTP
+def connectFtp():
+    ftp_server = ftplib.FTP()
+    # ftp_server.ssl_version = ssl.PROTOCOL_TLS
+    ftp_server.connect(FTP_SERVER, FTP_PORT)
+    registry_log("INFO", f"==> Se conecta al puerto [{FTP_PORT}] del servidor FTP [{FTP_SERVER}]")
+    ftp_server.login(FTP_USER, FTP_PASSWORD)
+    # ftp_server.prot_p()
+    ftp_server.af = socket.AF_INET6
+    registry_log("INFO", f"==> Se genera el login en el servidor FTP [FTP_USER={FTP_USER}, FTP_PASSWORD={FTP_PASSWORD}]")
+    ftp_server.set_debuglevel(2)
+    return ftp_server
+
+# Funcion que permite realizar la descarga de archivos del servidor FTP
+def updaloadFileToServer(file, fileNameSanitized):
+    ftp_server = connectFtp()
+    # Validamos si no existe el directorio shared
+    if not SHARED_PATH in ftp_server.nlst():
+        # Creamos el directorio file origin
+        ftp_server.mkd(SHARED_PATH)
+        registry_log("INFO", f"==> Se crea directorio [{SHARED_PATH}]")
+    ftp_server.cwd(SHARED_PATH)
+    # Validamos si existe el directorio file origin si no exite se crea
+    if not ORIGIN_PATH_FILES in ftp_server.nlst():
+        # Create a new directory called foo on the server.
+        ftp_server.mkd(ORIGIN_PATH_FILES)
+        registry_log("INFO", f"==> Se crea directorio [{ORIGIN_PATH_FILES}]")
+    ftp_server.cwd(ORIGIN_PATH_FILES)
+    # Subimos el archivo
+    ftp_server.storbinary(f"STOR {fileNameSanitized}", file)
+    # Cerramos conexion FTP y la apertura del archivo
+    closeConnectionServer(ftp_server)
+    file.close()
+
+# Funcion que permite realizar el cierre de conexiones del servidor FTP
+def closeConnectionServer(ftp_server):
+    ftp_server.quit()
+    ftp_server.close()
+    registry_log("INFO", f"==> Se cierra la conexion con el servidor FTP")
+
+# Funcion para registrar propiedades
+def registry_properties():
+    registry_log("INFO", f"==> Propiedades del sistema:")
+    registry_log("INFO", f"==> SHARED_PATH={SHARED_PATH}")
+    registry_log("INFO", f"==> ORIGIN_PATH_FILES={ORIGIN_PATH_FILES}")
+    registry_log("INFO", f"==> ALLOWED_EXTENSIONS={ALLOWED_EXTENSIONS}")
+    registry_log("INFO", f"==> EXP_REG_SANITIZATE={EXP_REG_SANITIZATE}")
+    registry_log("INFO", f"==> FTP_SERVER={FTP_SERVER}")
+    registry_log("INFO", f"==> FTP_PORT={FTP_PORT}")
+    registry_log("INFO", f"==> FTP_USER={FTP_USER}")
+    registry_log("INFO", f"==> FTP_PASSWORD={FTP_PASSWORD}")
+    registry_log("INFO", f"==> LOG_FILE={LOG_FILE}")
+    registry_log("INFO", f"==> Fin Propiedades del sistema")
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):
@@ -102,9 +144,9 @@ def formatHomologation(format):
     return formatHomologated
 
 # Funcion para envio de tareas asincronas
-@celery.task(name="celery")
+@celery.task(name=CELERY_TASK_NAME)
 def send_async_task(args):
-    registry_log("INFO", f"==> Se envia tarea con celery [{str(args)}]")
+    registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ [{str(args)}]")
 
 
 # Agregamos los recursos
