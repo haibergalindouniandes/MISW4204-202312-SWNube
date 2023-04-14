@@ -115,11 +115,11 @@
 								{
 									"key": "fileName",
 									"type": "file",
-									"src": "/C:/Users/haiber.galindo/Downloads/encoded-20230406005555.txt"
+									"src": "/C:/Users/haiber.galindo/Downloads/ParaHacerPruebas/TarjetasDeEstudio.docx"
 								},
 								{
 									"key": "newFormat",
-									"value": "zip",
+									"value": "tbz",
 									"type": "text"
 								}
 							]
@@ -155,7 +155,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{protocol}}://{{host}}:{{port}}/api/tasks?order=1&max=1",
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/tasks?order=1",
 							"protocol": "{{protocol}}",
 							"host": [
 								"{{host}}"
@@ -172,7 +172,86 @@
 								},
 								{
 									"key": "max",
-									"value": "1"
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteTaskById",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/tasks/3",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"tasks",
+								"3"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "files",
+			"item": [
+				{
+					"name": "getFileByIdTask",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/files/3?fileType=compressed",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"files",
+								"3"
+							],
+							"query": [
+								{
+									"key": "fileType",
+									"value": "compressed"
+								},
+								{
+									"key": "fileType",
+									"value": "original",
+									"disabled": true
 								}
 							]
 						}
@@ -211,7 +290,8 @@
 		{
 			"key": "host",
 			"value": "localhost",
-			"type": "string"
+			"type": "string",
+			"disabled": true
 		},
 		{
 			"key": "port",
@@ -221,6 +301,11 @@
 		{
 			"key": "jwt",
 			"value": ""
+		},
+		{
+			"key": "host",
+			"value": "localhost",
+			"type": "string"
 		}
 	]
 }
