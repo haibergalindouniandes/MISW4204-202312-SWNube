@@ -1,3 +1,5 @@
+import random
+import string
 from base import request, Resource, db, api, app, Task, jwt_required, task_schema, celery, ftplib, datetime, re, traceback, os, socket
 
 # Constantes
@@ -11,6 +13,7 @@ FTP_PORT = os.getenv("FTP_PORT", default=21)
 FTP_USER = os.getenv("FTP_USER", default="converteruser")
 FTP_PASSWORD = os.getenv("FTP_PASSWORD", default="Converter2023")
 LOG_FILE = os.getenv("LOG_FILE", default="log_tasks.txt")
+MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
 CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
 
 
@@ -41,6 +44,9 @@ class ConvertTaskFileResource(Resource):
             registry_log("INFO", f"==> Nombre original del archivo recibido [{dataFile}]")
             fileNameSanitized = re.sub(EXP_REG_SANITIZATE, '', dataFile)
             registry_log("INFO", f"==> Nombre sanitizado del archivo recibido [{fileNameSanitized}]")
+            # Generamos el prefijo para el archivo
+            prefix = f"{random_letters(MAX_LETTERS)}_"
+            fileNameSanitized = f"{prefix}{fileNameSanitized}"
             # Subimos el archivo 
             updaloadFileToServer(file, fileNameSanitized)    
             fileOriginPath = f"/{SHARED_PATH}/{ORIGIN_PATH_FILES}/{fileNameSanitized}"
@@ -69,6 +75,37 @@ class ConvertTaskFileResource(Resource):
             registry_log("ERROR", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": str(e)}, 500
 
+
+class ConvertTaskFileDelResource(Resource):
+    @jwt_required()
+    def delete(self, id_task):
+        registry_log("INFO", f"<=================== Inicio de la eliminación de tareas ===================>")
+        try:
+            # Se consulta la tarea con base al id
+            registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
+            task = Task.query.filter(Task.id == id_task).first()
+            # Se valida si no existe la tarea
+            registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
+            if task is None:
+                registry_log("ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
+                registry_log("ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+                return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
+            # Se elimina la tarea             
+            db.session.delete(task)
+            db.session.commit()
+            registry_log("INFO", f"==> La tarea con el id [{id_task}] fue eliminada correctamente")
+            registry_log("INFO", f"<=================== Fin de la eliminación de tareas ===================>")
+            return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
+        except Exception as e:
+            traceback.print_stack()
+            registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
+            registry_log("ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+            return {"msg": str(e)}, 500
+
+
+# Funcion que permite generar letras aleatorias
+def random_letters(max):
+       return ''.join(random.choice(string.ascii_letters) for x in range(max))
 
 # Funcion que permite realizar la conexion con el servidor FTP
 def connectFtp():
@@ -151,6 +188,7 @@ def send_async_task(args):
 
 # Agregamos los recursos
 api.add_resource(ConvertTaskFileResource, "/api/tasks")
+api.add_resource(ConvertTaskFileDelResource, "/api/tasks/<int:id_task>")
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

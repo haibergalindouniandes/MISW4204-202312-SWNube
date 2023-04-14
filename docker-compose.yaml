@@ -128,6 +128,22 @@ services:
       - rabbitmq_broker
       - ftp_server
 
+  mcs_files_queries:
+    image: mcs_files:latest
+    volumes:
+      - ./mcs_files/:/backend/
+    build: ./mcs_files
+    working_dir: /backend/
+    command: sh run_queries.sh
+    container_name: mcs_files_queries
+    restart: always
+    networks:
+      convert_network:
+        ipv4_address: 172.168.0.17
+    depends_on:
+      - postgres
+      - ftp_server
+
   nginx_proxy:
     image: nginx:latest
     ports:
@@ -146,7 +162,7 @@ services:
       - mcs_auth_queries
       - mcs_tasks_commands
       - mcs_tasks_queries
-      # - mcs_files_queries      
+      - mcs_files_queries      
 
 networks:
   convert_network:
