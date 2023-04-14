@@ -2,10 +2,6 @@
 
 ## Instalación
 
-El ejemplo del caso Foto Alpes es un proyecto en Flask que implementa microservicios y las tácticas vistas en el curso Arquitecturas ágiles de software. El presente repositorio contiene el código del ejemplo en diferentes ramas de acuerdo a los temas vistos. Las ramas del proyecto son:
-
-- main: Rama que implementa CQRS, uso de tokens y comunicación asíncrona
-
 Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) en su pc. Una vez instalado, se debe descargar la imagen de la máquina virtual ([MISW4204-202312-SWNube_VM.zip](https://drive.google.com/file/d/14PT9IbhUV4ZkEBdkTz9K21rhILMzq3KJ/view)) e importarla en Virtualbox. Para importar la imagen se deben seguir los siguientes pasos:
 
 1. Descargar el archivo MISW4204-202312-SWNube_VM.zip
@@ -16,9 +12,9 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
 
    <img src="https://github.com/ci-cortesg/fotoalpes-microservices-examples/blob/main/img/Agregar_VM.png" alt="Agregar_VM" style="zoom:75%;" />
 
-4. Ubicar la carpeta donde se descomprimió el archivo zip y seleccionar el archivo MISW4202-FotoAlpes-Microservicios-New.ovdx
+4. Ubicar la carpeta donde se descomprimió el archivo zip y seleccionar el archivo MISW4204-202312-SWNube_VM.ovdx
 
-   <img src="https://user-images.githubusercontent.com/110913673/231838077-83291dec-ab59-48e1-b333-1d7e63775689.png" alt="Seleccionar_Archivo_VM" style="zoom:75%;" />
+   ![image](https://user-images.githubusercontent.com/111320185/231919291-be90d829-8000-4937-a367-37834a9ee004.png)
 
 5. En el menú izquierdo debe aparecer la máquina con el nombre del archivo seleccionado
 
@@ -62,13 +58,14 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
    hostname -I
    ```
 
-19. Tomar nota de la dirección ip que se despliega en pantalla, como aparece en la siguiente imagen:
+19. Tomar nota de la  primera dirección ip que se despliega en pantalla, como aparece en la siguiente imagen:
 
-    <img src="https://user-images.githubusercontent.com/110913673/231840937-b744124a-392a-41df-a106-4a63b4a9f33e.png" alt="Direccion_IP_VM" style="zoom:75%;" />
+    ![image](https://user-images.githubusercontent.com/111320185/231919100-1793bee6-5752-4aca-8357-a804bbad01f1.png)
+
 
 20. La dirección IP obtenida en el paso anterior corresponde a la dirección asociada al adaptador de red de la máquina virtual. Tome nota de esta dirección porque se utilizará para acceder a los servicios desde su pc local
 
-21. Ubíquese en el directorio fotoalpes-microservices-examples ejecutando el siguiente comando:
+21. Ubíquese en el directorio MISW4204-202312-SWNube ejecutando el siguiente comando:
 
     ```
     cd MISW4204-202312-SWNube
