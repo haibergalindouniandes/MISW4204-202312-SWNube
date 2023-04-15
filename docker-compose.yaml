@@ -1,0 +1,63 @@
+version: "3.2"
+services:
+  postgres:    
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=dbconvert
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=dbpass
+      - PGDATA=/var/lib/postgresql/data
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - convert_network    
+  
+  rabbitmq_broker:
+    build:
+      context: .
+      dockerfile: ./rabbit_mq/Dockerfile
+    container_name: rabbitmq_broker
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - convert_network
+
+  mcs_converter:
+    restart: always
+    image: mcs_converter:latest
+    environment:
+      - SEPARATOR_SO=/
+    volumes:
+      - ./services/:/backend/
+    build: ./services
+    working_dir: /backend/
+    command: sh run_commands.sh
+    container_name: mcs_converter
+    networks:
+      - convert_network
+    depends_on:
+      - postgres
+      - rabbitmq_broker
+  
+  nginx_proxy:
+    image: nginx:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    container_name: nginx_proxy
+    restart: always
+    networks:
+      - convert_network
+    depends_on:
+      - postgres
+      - rabbitmq_broker
+      - mcs_converter
+
+networks:
+  convert_network:
+    driver: bridge

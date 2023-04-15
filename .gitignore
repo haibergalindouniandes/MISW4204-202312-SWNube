@@ -1,3 +1,8 @@
+# Customizated
+ftp/
+log_worker.txt
+log_tasks.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,3 +132,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.sqlite
