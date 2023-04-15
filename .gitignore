@@ -133,3 +133,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.sqlite
+
+
+#Archivos de trabajo
+services/files/1/compressed_files/*
+!services/files/1/compressed_files/.gitkeep
