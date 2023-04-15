@@ -138,3 +138,5 @@ dmypy.json
 #Archivos de trabajo
 services/files/1/compressed_files/*
 !services/files/1/compressed_files/.gitkeep
+services/files/1/origin_files/*
+!services/files/1/origin_files/.gitkeep
