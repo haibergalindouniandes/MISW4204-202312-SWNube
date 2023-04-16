@@ -11,6 +11,10 @@
 | Jorge M. Carrillo                | jm.carrillo@uniandes.edu.co   |
 | Shiomar Alberto Salazar Castillo | s.salazarc@uniandes.edu.co    |
 
+## Objetivo del proyecto
+
+Este proyecto tiene como objetivo brindar las funcionalidades que permitan la creación de cuentas de usuario, subir archivos en un formato especifico, crear tareas de conversión de formato (zip, 7zip, tar.gz, tar.bz2), convertir dichos archivos al formato deseado, consultar el estado de la tarea de conversión y descargar los archivos (original o convertido). 
+
 ## Arquitectura del proyecto
 
 ### Vista de contexto
@@ -72,4 +76,18 @@ Herramienta de medición del rendimiento de una infraestructura de servicios, de
 
 ### Estructura de carpetas del proyecto
 
+El proyecto esta compuesto por la siguiente estructura de carpetas:
+
 ![image](https://user-images.githubusercontent.com/110913673/232340051-7cd0d19b-e288-4d72-8d14-d5e24c5de5c4.png)
+
+- **collections:** En esta carpeta se encuentra el proyecto en Postman, que contiene la configuración para poder realizar la ejecución o consumo de las diferentes funcionalidades que expone la aplicación
+
+- **jmeter:** En esta carpeta se encuentra los TestCase que se implementarón con la herramienta JMeter, para validar la carga que puede soportar la aplicación. También se encuentra los archivos utilizados para estas pruebas 
+
+- **nginx:** En esta carpeta se encuentra el archivo de configuración de NGinx para la implementación como Proxy Reverse, que permite exponer las funcionalidades a través de un único punto de entrada (<IP_HOST>:8080) 
+
+- **rabbit_mq:** En esta carpeta se encuentran los archivos de configuración de Rabbit MQ, que se utiliza en el proyecto como Broker de mensajeria para alojar tareas que serán procesadas de manera asíncrona 
+
+- **servies:** En esta carpeta se encuentran los componentes que hacen parte del Microservicio **mcs_converter**
+
+- **vm:** En esta carpeta se encuentra el README.md que contiene la información para realizar la descarga, configuración y lanzamiento de la maquina virtual que contiene todo el proyecto funcional
