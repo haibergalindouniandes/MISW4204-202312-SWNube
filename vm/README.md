@@ -52,30 +52,48 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
 
 17. Ingresar con el usuario **estudiante** y la contraseña **Estudiante2021**
 
-18. Ejecutar el siguiente comando:
+18. Postaerior a lo anterior, iniciaremos sesión como usuario root, ingresando el siguiente commando `sudo su` y se nos pedira la contraseña del usuario root `Estudiante2021`
+
+![image](https://user-images.githubusercontent.com/110913673/232261339-b7528a24-660f-4f1e-b242-919599002951.png)
+
+19. Ejecutar el siguiente comando:
 
    ```
    hostname -I
    ```
 
-19. Tomar nota de la  primera dirección ip que se despliega en pantalla, como aparece en la siguiente imagen:
+20. Tomar nota de la  primera dirección ip que se despliega en pantalla, como aparece en la siguiente imagen:
 
     ![image](https://user-images.githubusercontent.com/111320185/231919100-1793bee6-5752-4aca-8357-a804bbad01f1.png)
 
 
-20. La dirección IP obtenida en el paso anterior corresponde a la dirección asociada al adaptador de red de la máquina virtual. Tome nota de esta dirección porque se utilizará para acceder a los servicios desde su pc local
+21. La dirección IP obtenida en el paso anterior corresponde a la dirección asociada al adaptador de red de la máquina virtual. Tome nota de esta dirección porque se utilizará para acceder a los servicios desde su pc local
 
-21. Ubíquese en el directorio MISW4204-202312-SWNube ejecutando el siguiente comando:
+22. Ubíquese en el directorio MISW4204-202312-SWNube ejecutando el siguiente comando:
 
     ```
     cd MISW4204-202312-SWNube
     ```
 
-22. Para ejecutar los servicios, corra el siguiente comando:
-
+23. Para ejecutar los servicios, corra el siguiente comando y validar que queden en estado `done`:
     ```
-    sudo docker-compose up
+    sudo docker-compose up -d
     ```
-23. Una vez termine la instalación se debera ver la consola de la siguiente manera, lo que indicará que ya esta listo para recibir peticiones.
+![image](https://user-images.githubusercontent.com/110913673/232261466-389ebce9-0214-4644-8ab7-5f30d0375300.png)
     
-   <img src="https://user-images.githubusercontent.com/110913673/231844481-f3638266-e68b-42c0-bc36-129294961708.png" alt="Direccion_IP_VM" style="zoom:75%;" />
+24. Una vez los servicios esten arriba iniciaremos nuestro worker, para que este a la escuha de las diferente tareas de conversión que se envian. 
+
+25. Ingresamos el siguiente comando en la consoal de nuestra maquina virtual para conectarnos con el contenedor mcs_converter:
+```
+docker exec -ti mcs_converter sh
+``` 
+![image](https://user-images.githubusercontent.com/110913673/232261598-1764218c-e7d7-4673-9cbc-77eeb9c5389f.png)
+
+26. Despues ingresamos el siguiente comando para inicializar nuestro worker:
+```
+celery -A worker.celery worker --pool=solo -l info
+```
+![image](https://user-images.githubusercontent.com/110913673/232261619-5d3ac13f-26a7-4dfb-80b6-0836816bbab7.png)
+
+27. Cuando suba el worker debera visualizarse de la siguiente manera y ya se podra dar inicio con las pruebas correspondiente:
+![image](https://user-images.githubusercontent.com/110913673/232261729-0ab8e906-a2f8-4e5d-aaa3-0acfcde93119.png)
