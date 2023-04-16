@@ -15,14 +15,13 @@ services:
       - convert_network    
   
   rabbitmq_broker:
-    build:
-      context: .
-      dockerfile: ./rabbit_mq/Dockerfile
-    container_name: rabbitmq_broker
-    restart: always
+    image: "rabbitmq:3.9.13-management"
     ports:
       - "5672:5672"
       - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=ConverterUser
+      - RABBITMQ_DEFAULT_PASS=ConverterPass
     networks:
       - convert_network
 

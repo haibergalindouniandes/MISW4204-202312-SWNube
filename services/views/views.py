@@ -21,7 +21,8 @@ RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
 RABBIT_PORT = os.getenv("RABBIT_PORT", default=5672)
 RABBIT_VHOST = os.getenv("RABBIT_VHOST", default="vhost_converter")
 CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
-BROKER_URL = f"amqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}:{RABBIT_PORT}/{RABBIT_VHOST}"
+# BROKER_URL = f"amqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}:{RABBIT_PORT}/{RABBIT_VHOST}"
+BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 # SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="\\")

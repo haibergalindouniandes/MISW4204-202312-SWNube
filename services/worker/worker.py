@@ -18,7 +18,8 @@ RABBIT_VHOST = os.getenv("RABBIT_VHOST", default="vhost_converter")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="\\")
 TMP_PATH = os.getenv("TMP_PATH", default="tmp")
 CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
-BROKER_URL = f"amqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}:{RABBIT_PORT}/{RABBIT_VHOST}"
+# BROKER_URL = f"amqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}:{RABBIT_PORT}/{RABBIT_VHOST}"
+BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 HOME_PATH = os.getcwd()
 FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")

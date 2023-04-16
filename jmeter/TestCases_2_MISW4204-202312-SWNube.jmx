@@ -18,10 +18,10 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <intProp name="LoopController.loops">-1</intProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">11</stringProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
-        <stringProp name="ThreadGroup.duration">60</stringProp>
+        <stringProp name="ThreadGroup.duration">600</stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </ThreadGroup>
@@ -47,7 +47,7 @@
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">192.168.0.13</stringProp>
+          <stringProp name="HTTPSampler.domain">192.168.0.16</stringProp>
           <stringProp name="HTTPSampler.port">8080</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
@@ -66,7 +66,7 @@
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
-                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MTM1ODQ0NiwianRpIjoiYzRkMDcyNjYtZmY3NS00MTk2LWJhNGMtZDc5NTgyNGZkMDgwIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgxMzU4NDQ2LCJleHAiOjE2ODEzNTkzNDZ9.26ZvarX_--3mKg0y_nCmKwSTOZXhpGmsNzL5Lqc9PIE</stringProp>
+                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MTYxMzY3NywianRpIjoiNDVkMWVmYWYtOGU5OS00YWZkLWJlNDgtNzg1M2YwNDEzNmEyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgxNjEzNjc3LCJleHAiOjE2ODE2MTQ1Nzd9.KJcQ85zwq6D2m1aiURDTsYdgdXgMyzSnDcxO76E8BP8</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
