@@ -76,10 +76,10 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
 23. Para ejecutar los servicios, corra el siguiente comando y validar que queden en estado `done`:
     ```
     sudo docker-compose up -d
-    ```
-   <img src="https://user-images.githubusercontent.com/110913673/232261466-389ebce9-0214-4644-8ab7-5f30d0375300.png" alt="Comando_docker_compose" style="zoom:75%;" />
-    
+    ```       
 24. Una vez los servicios esten arriba iniciaremos nuestro worker, para que este a la escuha de las diferente tareas de conversión que se envian. 
+
+   <img src="https://user-images.githubusercontent.com/110913673/232261466-389ebce9-0214-4644-8ab7-5f30d0375300.png" alt="Comando_docker_compose" style="zoom:75%;" />
 
 25. Ingresamos el siguiente comando en la consoal de nuestra maquina virtual para conectarnos con el contenedor mcs_converter:
 ```
