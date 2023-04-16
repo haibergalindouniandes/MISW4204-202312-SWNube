@@ -88,6 +88,6 @@ El proyecto esta compuesto por la siguiente estructura de carpetas:
 
 - **rabbit_mq:** En esta carpeta se encuentran los archivos de configuración de Rabbit MQ, que se utiliza en el proyecto como Broker de mensajeria para alojar tareas que serán procesadas de manera asíncrona 
 
-- **servies:** En esta carpeta se encuentran los componentes que hacen parte del Microservicio **mcs_converter**
+- **servies:** En esta carpeta se encuentran los componentes que hacen parte del Microservicio **mcs_converter** que expone las funcionalidad mencionadas anteriormente
 
 - **vm:** En esta carpeta se encuentra el README.md que contiene la información para realizar la descarga, configuración y lanzamiento de la maquina virtual que contiene todo el proyecto funcional
