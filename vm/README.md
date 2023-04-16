@@ -54,18 +54,16 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
 
 18. Postaerior a lo anterior, iniciaremos sesión como usuario root, ingresando el siguiente commando `sudo su` y se nos pedira la contraseña del usuario root `Estudiante2021`
 
-![image](https://user-images.githubusercontent.com/110913673/232261339-b7528a24-660f-4f1e-b242-919599002951.png)
+   <img src="https://user-images.githubusercontent.com/110913673/232261339-b7528a24-660f-4f1e-b242-919599002951.png" alt="Logueo_como_root" style="zoom:75%;" />
 
 19. Ejecutar el siguiente comando:
-
    ```
    hostname -I
    ```
 
 20. Tomar nota de la  primera dirección ip que se despliega en pantalla, como aparece en la siguiente imagen:
 
-    ![image](https://user-images.githubusercontent.com/111320185/231919100-1793bee6-5752-4aca-8357-a804bbad01f1.png)
-
+   <img src="https://user-images.githubusercontent.com/111320185/231919100-1793bee6-5752-4aca-8357-a804bbad01f1.png" alt="Comando_docker_compose" style="zoom:75%;" />
 
 21. La dirección IP obtenida en el paso anterior corresponde a la dirección asociada al adaptador de red de la máquina virtual. Tome nota de esta dirección porque se utilizará para acceder a los servicios desde su pc local
 
@@ -79,7 +77,7 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
     ```
     sudo docker-compose up -d
     ```
-![image](https://user-images.githubusercontent.com/110913673/232261466-389ebce9-0214-4644-8ab7-5f30d0375300.png)
+   <img src="https://user-images.githubusercontent.com/110913673/232261466-389ebce9-0214-4644-8ab7-5f30d0375300.png" alt="Comando_docker_compose" style="zoom:75%;" />
     
 24. Una vez los servicios esten arriba iniciaremos nuestro worker, para que este a la escuha de las diferente tareas de conversión que se envian. 
 
@@ -87,13 +85,15 @@ Para ejecutar el proyecto localmente, es necesario instalar [Oracle VirtualBox](
 ```
 docker exec -ti mcs_converter sh
 ``` 
-![image](https://user-images.githubusercontent.com/110913673/232261598-1764218c-e7d7-4673-9cbc-77eeb9c5389f.png)
+   <img src="https://user-images.githubusercontent.com/110913673/232261598-1764218c-e7d7-4673-9cbc-77eeb9c5389f.png" alt="Comando_terminal_contenedor" style="zoom:75%;" />
 
 26. Despues ingresamos el siguiente comando para inicializar nuestro worker:
 ```
 celery -A worker.celery worker --pool=solo -l info
 ```
-![image](https://user-images.githubusercontent.com/110913673/232261619-5d3ac13f-26a7-4dfb-80b6-0836816bbab7.png)
+   <img src="https://user-images.githubusercontent.com/110913673/232261619-5d3ac13f-26a7-4dfb-80b6-0836816bbab7.png" alt="Comando_Worker" style="zoom:75%;" />
 
 27. Cuando suba el worker debera visualizarse de la siguiente manera y ya se podra dar inicio con las pruebas correspondiente:
-![image](https://user-images.githubusercontent.com/110913673/232261729-0ab8e906-a2f8-4e5d-aaa3-0acfcde93119.png)
+
+   <img src="https://user-images.githubusercontent.com/110913673/232261729-0ab8e906-a2f8-4e5d-aaa3-0acfcde93119.png" alt="Inicio_Celery_Worker" style="zoom:75%;" />
+
