@@ -98,7 +98,7 @@ El proyecto esta compuesto por la siguiente estructura de carpetas:
   - **Instalación de docker en Windows**: https://docs.docker.com/desktop/install/windows-install
   - **Instalación de docker en Linux Ubuntu**: https://docs.docker.com/engine/install/ubuntu
   - **Instalación de docker en Mac**: https://docs.docker.
-  - Se debe clonar el proyecto **MISW4202-11-Equipo1**: https://github.com/shiomar-salazar/MISW4202-11-Equipo1
+  - Se debe clonar el proyecto **MISW4204-202312-SWNube**: [Repositorio](https://github.com/shiomar-salazar/MISW4204-202312-SWNube)
   
 - **Docker**:
   - Desde la raiz del proyecto, se debe ejecutar en una terminal el siguiente comando **`docker compose up -d`** para que docker a través del archivo **`docker-compose.yaml`** realice la creación de las imagenes y el despliegue de los contenedores. Y esperamos a que las instancias queden arriba:
@@ -106,7 +106,10 @@ El proyecto esta compuesto por la siguiente estructura de carpetas:
 <img src="https://user-images.githubusercontent.com/110913673/232261466-389ebce9-0214-4644-8ab7-5f30d0375300.png" alt="Comando_docker_compose" style="zoom:75%;" />
   
 - **JMeter**:
-Ir a la carpeta **`bin`** donde se instalo JMeter y ejecutar el archivo **`jmeter.bat`**.
+
+Para realizar la descarga de JMeter se puede hacer desde la página oficial [Descarga JMeter](https://jmeter.apache.org/download_jmeter.cgi)
+<br/>
+Una vez realizada la descarga y descompresión de los archivos -> Ir a la carpeta **`bin`** donde se instalo JMeter y ejecutar el archivo **`jmeter.bat`**.
 
 <img src="https://user-images.githubusercontent.com/110913673/221445381-c93eefe5-b9c1-40eb-9d31-daf2de0bcacc.png" alt="jmeter" style="zoom:75%;" />
 
