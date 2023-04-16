@@ -47,7 +47,7 @@
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.domain">192.168.0.16</stringProp>
           <stringProp name="HTTPSampler.port">8080</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
@@ -66,7 +66,7 @@
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
-                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MTU4MTQzMCwianRpIjoiZTJjZWJjYWQtZmRlMy00NDMwLWFmMjYtNTAwNDE3NjQ5NzM1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgxNTgxNDMwLCJleHAiOjE2ODE1ODIzMzB9.-pPD9bQlT8vqZQP70iXIdAxpISi8f6z7uqSl8_WDm44</stringProp>
+                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MTYwNTI2MiwianRpIjoiYzVjMDU4ZWEtMTc4Zi00MzAzLTg4MzctZmEzNDdlODE3NDkxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgxNjA1MjYyLCJleHAiOjE2ODE2MDYxNjJ9.zpHrSAiB0c5lv2a3FSSoC98VNO5-VIkcSvOd8NPQ_dg</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
@@ -113,7 +113,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\ViewResultTree.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
@@ -150,7 +150,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\SummaryReport.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
@@ -187,7 +187,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\AggregateReport.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <BackendListener guiclass="BackendListenerGui" testclass="BackendListener" testname="Backend Listener" enabled="true">
@@ -267,7 +267,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\ResultInTable.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <Summariser guiclass="SummariserGui" testclass="Summariser" testname="Generate Summary Results" enabled="true"/>
@@ -306,7 +306,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\AssertionResults.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <ResultCollector guiclass="StatGraphVisualizer" testclass="ResultCollector" testname="Aggregate Graph" enabled="true">
@@ -343,7 +343,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\AggregateGraph.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="Graph Results" enabled="true">
@@ -380,7 +380,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\GraphRestults.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <ResultCollector guiclass="RespTimeGraphVisualizer" testclass="ResultCollector" testname="Response Time Graph" enabled="true">
@@ -417,7 +417,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\ResponseTimeGraph.csv</stringProp>
           </ResultCollector>
           <hashTree/>
           <ResultCollector guiclass="SimpleDataWriter" testclass="ResultCollector" testname="Simple Data Writer" enabled="true">
@@ -454,44 +454,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-            <stringProp name="filename"></stringProp>
-          </ResultCollector>
-          <hashTree/>
-          <ResultCollector guiclass="TableVisualizer" testclass="ResultCollector" testname="View Results in Table" enabled="true">
-            <boolProp name="ResultCollector.error_logging">false</boolProp>
-            <objProp>
-              <name>saveConfig</name>
-              <value class="SampleSaveConfiguration">
-                <time>true</time>
-                <latency>true</latency>
-                <timestamp>true</timestamp>
-                <success>true</success>
-                <label>true</label>
-                <code>true</code>
-                <message>true</message>
-                <threadName>true</threadName>
-                <dataType>true</dataType>
-                <encoding>false</encoding>
-                <assertions>true</assertions>
-                <subresults>true</subresults>
-                <responseData>false</responseData>
-                <samplerData>false</samplerData>
-                <xml>false</xml>
-                <fieldNames>true</fieldNames>
-                <responseHeaders>false</responseHeaders>
-                <requestHeaders>false</requestHeaders>
-                <responseDataOnError>false</responseDataOnError>
-                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                <assertionsResultsToSave>0</assertionsResultsToSave>
-                <bytes>true</bytes>
-                <sentBytes>true</sentBytes>
-                <url>true</url>
-                <threadCounts>true</threadCounts>
-                <idleTime>true</idleTime>
-                <connectTime>true</connectTime>
-              </value>
-            </objProp>
-            <stringProp name="filename"></stringProp>
+            <stringProp name="filename">C:\MISW4204-202312-SWNube\jmeter\Resultados\TestCase_1\SimpleDataWriter.csv</stringProp>
           </ResultCollector>
           <hashTree/>
         </hashTree>

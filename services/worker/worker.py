@@ -116,7 +116,7 @@ def compressIn7Zip(fullFilePathOrigin, filePathCompressed, fileName, fileConvert
     with py7zr.SevenZipFile(fileCompressed, 'w') as file:
         file.writeall(f"{fullFilePathOrigin}", f"{fileName}{originExt}")
     registry_log("INFO", f"==> Finaliza conversion en 7ZIP")
-    return True
+    return fileCompressed
 
 # Funcion para comprimir en formato TGZ
 def compressInTgz(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
@@ -128,7 +128,7 @@ def compressInTgz(fullFilePathOrigin, filePathCompressed, fileName, fileConverte
     with tarfile.open(f"{fileCompressed}", 'w:gz') as file:
         file.add(f"{fullFilePathOrigin}", f"{fileName}{originExt}")
     registry_log("INFO", f"==> Finaliza conversion en TAR.GZ")
-    return True
+    return fileCompressed
 
 # Funcion para comprimir en formato BZ2
 def compressInTbz(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
@@ -140,4 +140,4 @@ def compressInTbz(fullFilePathOrigin, filePathCompressed, fileName, fileConverte
     with tarfile.open(f"{fileCompressed}", 'w:bz2') as file:
         file.add(f"{fullFilePathOrigin}", f"{fileName}{originExt}")
     registry_log("INFO", f"==> Finaliza conversion en TAR.BZ2")
-    return True
+    return fileCompressed

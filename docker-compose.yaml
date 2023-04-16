@@ -31,11 +31,11 @@ services:
     image: mcs_converter:latest
     environment:
       - SEPARATOR_SO=/
+    command: gunicorn --bind 0.0.0.0:5000 manage:app
     volumes:
       - ./services/:/backend/
     build: ./services
     working_dir: /backend/
-    command: sh run_commands.sh
     container_name: mcs_converter
     networks:
       - convert_network
