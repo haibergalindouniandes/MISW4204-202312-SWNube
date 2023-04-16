@@ -69,3 +69,7 @@ Plataforma de contenerización de código abierto. Permite a los empaquetar apli
 #### New Relic APM
 
 Herramienta de medición del rendimiento de una infraestructura de servicios, desde backend hasta frontend: medición del rendimiento de navegadores, APIs, servidores, aplicaciones móviles
+
+### Estructura de carpetas del proyecto
+
+![image](https://user-images.githubusercontent.com/110913673/232340051-7cd0d19b-e288-4d72-8d14-d5e24c5de5c4.png)
