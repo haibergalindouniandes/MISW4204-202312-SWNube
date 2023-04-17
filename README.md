@@ -124,3 +124,12 @@ Seleccionamos el archivo de prueba del caso a lanzar **`TestCases_1_MISW4204-202
 Por ultimo se ejecuta las pruebas.
 
 <img src="https://user-images.githubusercontent.com/110913673/221446161-bda2d2ba-2fe6-41cb-9c9e-6338cac4f3d5.png" alt="ejecucion_pruebas" style="zoom:75%;" />
+
+- **Máquina virtual**:
+
+Como prerequisito se debe tener instalado VirtualBox y se puede descarga desde la página oficial Descarga [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+<br/>
+
+Para realizar la instalación y configuración de la máquina virtual, la cual contiene todo el ambiente ya configurado para la ejecución de la aplicación. Se debe seguir la información consignada en el [README.md](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/tree/development/vm)
+
+
