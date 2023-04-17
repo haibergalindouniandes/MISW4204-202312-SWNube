@@ -132,4 +132,4 @@ Como prerequisito se debe tener instalado VirtualBox y se puede descarga desde l
 
 Para realizar la instalación y configuración de la máquina virtual, la cual contiene todo el ambiente ya configurado para la ejecución de la aplicación. Se debe seguir la información consignada en el [README.md](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/tree/development/vm)
 
-
+<img src="https://user-images.githubusercontent.com/110913673/231838904-3807ce00-8c40-43fb-9680-8e946bdaa72e.png" alt="Iniciar_VM" style="zoom:75%;" />
