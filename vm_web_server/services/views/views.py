@@ -15,8 +15,8 @@ from werkzeug.utils import secure_filename
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
 RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
 RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
-RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
-RABBIT_PORT = os.getenv("RABBIT_PORT", default=5672)
+RABBIT_HOST = os.getenv("RABBIT_HOST", default="35.192.44.77")
+RABBIT_PORT = os.getenv("RABBIT_PORT", default=15672)
 CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
 BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")

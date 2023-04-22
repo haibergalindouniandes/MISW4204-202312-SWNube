@@ -3,6 +3,7 @@ services:
   mcs_converter:
     restart: always
     image: mcs_converter:latest
+    privileged: true
     environment:
       - DB_HOST=34.86.0.243
       - DB_NAME=postgres
@@ -14,7 +15,8 @@ services:
       - HOME_PATH=/mnt/nfs_clientshare
     command: sh run_commands.sh
     volumes:
-      - ./services/:/backend/
+      # - ./services/:/backend/
+      - nfs_shared:/mnt/nfs_clientshare/      
     build: ./services
     working_dir: /backend/
     container_name: mcs_converter
@@ -33,6 +35,14 @@ services:
       - convert_network
     depends_on:
       - mcs_converter
+
+volumes:
+  nfs_shared:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+      device: ":/mnt/nfs_share/"
 
 networks:
   convert_network:
