@@ -1,11 +1,17 @@
 version: "3.2"
 services:
-  
   mcs_converter:
     restart: always
     image: mcs_converter:latest
     environment:
+      - DB_HOST=34.86.0.243
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=dbpass
+      - DB_PORT=5432
       - SEPARATOR_SO=/
+      - RABBIT_HOST=34.71.210.148
+      - RABBIT_PORT=5672
     command: sh run_commands.sh
     volumes:
       - ./services/:/backend/
@@ -14,9 +20,6 @@ services:
     container_name: mcs_converter
     networks:
       - convert_network
-    #depends_on:
-    #  - postgres
-    #  - rabbitmq_broker
   
   nginx_proxy:
     image: nginx:latest
@@ -29,8 +32,6 @@ services:
     networks:
       - convert_network
     depends_on:
-    #  - postgres
-    #  - rabbitmq_broker
       - mcs_converter
 
 networks:

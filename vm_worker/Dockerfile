@@ -7,13 +7,18 @@ RUN apk update && apk upgrade && \
     gcc \
     libc-dev \
     libffi-dev \
-    libpq-dev
+    libpq-dev \
+    nfs-utils
 # Make dir app
 RUN mkdir /backend
 WORKDIR /backend
+
 COPY requirements.txt /backend/
 RUN pip install -r requirements.txt
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
+
+# RUN mkdir -p /mnt/nfs_clientshare
+# RUN mount 192.168.0.16:/mnt/nfs_share /mnt/nfs_clientshare
 # Expose port 8080 to the outside world
 EXPOSE 5000

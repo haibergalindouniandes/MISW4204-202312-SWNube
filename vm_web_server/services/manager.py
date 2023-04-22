@@ -8,17 +8,18 @@ from models import db
 from flask_jwt_extended import JWTManager
 
 # Constantes
-POSTGRES_USER = os.getenv("POSTGRES_USER", default="dbuser")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", default="dbpass")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", default="postgres")
-POSTGRES_DB = os.getenv("POSTGRES_DB", default="dbconvert")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", default=5432)
+DB_DRIVER = os.getenv("DB_DRIVER", default="postgresql")
+DB_USER = os.getenv("DB_USER", default="postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", default="dbpass")
+DB_HOST = os.getenv("DB_HOST", default="34.86.0.243")
+DB_NAME = os.getenv("DB_NAME", default="postgres")
+DB_PORT = os.getenv("DB_PORT", default=5432)
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", default="JwBGj2B4XFAKhYmn8Pgk0vH2w7UvgYfXAJ32e5rs8vI=")
 
 
 # Configuracion app
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PROPAGATE_EXCEPTIONS"] = True
 app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY

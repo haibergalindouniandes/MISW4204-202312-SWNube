@@ -10,8 +10,6 @@ from models import db, User, UserSchema, Task, TaskSchema
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
-from worker import process_file
-# from ..tareas import convert_file
 
 # Constantes
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
@@ -21,17 +19,16 @@ RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
 RABBIT_PORT = os.getenv("RABBIT_PORT", default=5672)
 RABBIT_VHOST = os.getenv("RABBIT_VHOST", default="vhost_converter")
 CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
-# BROKER_URL = f"amqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}:{RABBIT_PORT}/{RABBIT_VHOST}"
 BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
-# SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
-SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="\\")
+SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
 HOME_PATH = os.getcwd()
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
 
-
+# Configuramos Celery
+celery = Celery(CELERY_TASK_NAME, broker=BROKER_URL)
 # Definimos los esquemas
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -145,7 +142,8 @@ class ConvertTaskFileResource(Resource):
             registry_log("INFO", f"==> Se registra tarea en BD [{task_schema.dump(newTask)}]")
             # Enviamos de tarea asincrona
             args = (task_schema.dump(newTask))
-            process_file.delay(args)
+            registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ [{BROKER_URL}] el siguiente mensaje [{str(args)}]")
+            send_async_task.delay(args)
             # Retornamos respuesta exitosa
             registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
@@ -256,7 +254,6 @@ class FileDownloadResource(Resource):
                 registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
                 return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
             
-            print(f"=>>>>>>>>>>>>>>>>>>>>>>>>>>>>llega hasta despues de la consulta [{task.id}]")
             pathFileToDownload = None
             # Descargamos el archivo
             if fileType == 'original':
@@ -264,7 +261,6 @@ class FileDownloadResource(Resource):
             else:
                 pathFileToDownload = task.file_convert_path
             
-            print("=>>>>>>>>>>>>>>>>>>>>>>>>>>>>llega hasta aqui")
             registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
             registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
             # return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
@@ -274,6 +270,11 @@ class FileDownloadResource(Resource):
             registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
             registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
             return {"msg": str(e)}, 500
+
+# Funcion para envio de tareas asincronas
+@celery.task(name=CELERY_TASK_NAME)
+def send_async_task(args):
+    registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ el siguiente mensaje [{str(args)}]")
 
 # Funcion que permite generar letras aleatorias
 def random_letters(max):
