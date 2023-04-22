@@ -14,6 +14,7 @@ services:
 
   celery_worker:
     image: celery_worker:latest
+    privileged: true
     environment:
       - C_FORCE_ROOT=true
       - HOME_PATH=/mnt/nfs_clientshare
@@ -22,36 +23,26 @@ services:
       - DB_USER=postgres
       - DB_PASS=dbpass
       - DB_NAME=postgres
-      
     build: .
     working_dir: /backend/
     volumes:
-      - .:/backend/
-      # - nfs_shared:/backend/
+      - nfs_shared:/mnt/nfs_clientshare/
     command: celery -A worker.celery worker --pool=solo -l info
     container_name: celery_worker
     restart: always
     networks:
       - convert_network
-    # networks:
-    #   convert_network:
-    #     ipv4_address: 192.168.0.17
     depends_on:
       - rabbitmq_broker
 
-# The volume that you want to define for use int he containers.
-# volumes:
-#   nfs_shared:
-#     driver: local # Must be set to avoid issues.
-#     driver_opts:
-#       type: "nfs"
-#       o: "addr=192.168.0.16,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
-#       device: ":/mnt/nfs_share/"
+volumes:
+  nfs_shared:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+      device: ":/mnt/nfs_share/"
 
 networks:
   convert_network:
     driver: bridge
-#     ipam:
-#       config:
-#         - subnet: 192.168.0.0/24
-

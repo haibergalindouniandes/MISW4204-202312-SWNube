@@ -116,8 +116,6 @@ def registry_log(severity, message):
             f"[{severity}]-[{datetime.now()}]-[{message}]\n")
 
 # Funcion para comprimir archivos
-
-
 def compressFileAndUpload(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
     fileProcessed = None
     # Comprimimos el archivo
@@ -136,8 +134,6 @@ def compressFileAndUpload(fullFilePathOrigin, filePathCompressed, fileName, file
     return fileProcessed
 
 # Funcion para comprimir en formato zip
-
-
 def compressInZip(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
     registry_log("INFO", f"==> Inicia conversion en ZIP")
     # Comprimimos el archivo
@@ -150,8 +146,6 @@ def compressInZip(fullFilePathOrigin, filePathCompressed, fileName, fileConverte
     return fileCompressed
 
 # Funcion para comprimir en formato 7Zip
-
-
 def compressIn7Zip(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
     registry_log("INFO", f"==> Inicia conversion en 7ZIP")
     # Comprimimos el archivo
@@ -164,8 +158,6 @@ def compressIn7Zip(fullFilePathOrigin, filePathCompressed, fileName, fileConvert
     return fileCompressed
 
 # Funcion para comprimir en formato TGZ
-
-
 def compressInTgz(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
     registry_log("INFO", f"==> Inicia conversion en TAR.GZ")
     # Comprimimos el archivo
@@ -178,8 +170,6 @@ def compressInTgz(fullFilePathOrigin, filePathCompressed, fileName, fileConverte
     return fileCompressed
 
 # Funcion para comprimir en formato BZ2
-
-
 def compressInTbz(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
     registry_log("INFO", f"==> Inicia conversion en TAR.BZ2")
     # Comprimimos el archivo
