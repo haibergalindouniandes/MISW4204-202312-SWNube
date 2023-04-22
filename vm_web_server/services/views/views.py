@@ -17,13 +17,12 @@ RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
 RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
 RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
 RABBIT_PORT = os.getenv("RABBIT_PORT", default=5672)
-RABBIT_VHOST = os.getenv("RABBIT_VHOST", default="vhost_converter")
 CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
 BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
-HOME_PATH = os.getcwd()
+HOME_PATH = os.getenv("HOME_PATH", default=os.getcwd())
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
 

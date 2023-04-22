@@ -11,7 +11,7 @@ services:
       - DB_PORT=5432
       - SEPARATOR_SO=/
       - RABBIT_HOST=34.71.210.148
-      - RABBIT_PORT=5672
+      - HOME_PATH=/mnt/nfs_clientshare
     command: sh run_commands.sh
     volumes:
       - ./services/:/backend/
