@@ -1,0 +1,303 @@
+import hashlib
+import os
+import random
+import string
+import traceback
+from datetime import datetime
+from celery import Celery
+from flask import request, send_file
+from models import db, User, UserSchema, Task, TaskSchema
+from flask_restful import Resource
+from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
+from werkzeug.utils import secure_filename
+
+# Constantes
+ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
+RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
+RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
+RABBIT_HOST = os.getenv("RABBIT_HOST", default="35.192.44.77")
+RABBIT_PORT = os.getenv("RABBIT_PORT", default=15672)
+CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
+BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
+LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
+SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
+MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
+HOME_PATH = os.getenv("HOME_PATH", default=os.getcwd())
+ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
+FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
+
+# Configuramos Celery
+celery = Celery(CELERY_TASK_NAME, broker=BROKER_URL)
+# Definimos los esquemas
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+task_schema = TaskSchema()
+tasks_schema = TaskSchema(many=True)
+
+
+# Clase que contiene la logica para solicitar el token
+class AuthLogInResource(Resource):
+    def post(self):
+        password_encriptada = hashlib.md5(
+            request.json["password"].encode("utf-8")
+        ).hexdigest()
+        usuario = User.query.filter(
+            User.username == request.json["username"],
+            User.password == password_encriptada,
+        ).first()
+        
+        if usuario is None:
+            return {"msg": "Usuario o contraseña invalida"}, 409
+        
+        token_de_acceso = create_access_token(identity=usuario.id)
+        return {
+            "msg": "Inicio de sesión exitoso",
+            "username": usuario.username,
+            "token": token_de_acceso,
+        }
+
+# Clase que contiene la logica para registrar un usuario nuevo
+class AuthSignUpResource(Resource):
+    def post(self):
+        usuario = User.query.filter(User.username == request.json["username"]).first()
+        if usuario is None:
+            email = User.query.filter(User.email == request.json["email"]).first()
+            if email is None:
+                if request.json["password1"] == request.json["password2"]:
+                    password_encriptada = hashlib.md5(
+                        request.json["password1"].encode("utf-8")
+                    ).hexdigest()
+                    new_user = User(
+                        username=request.json["username"],
+                        password=password_encriptada,
+                        email=request.json["email"],
+                    )
+                    db.session.add(new_user)
+                    db.session.commit()
+                    return user_schema.dump(new_user)
+                else:
+                    return {"msg": "El password no coincide"}, 409
+            else:
+                return {"msg": "El email ya existe"}, 409
+        else:
+            return {"msg": "El usuario ya existe"}, 409
+
+
+# Clase que contiene la logica para registrar tareas de conversión
+class ConvertTaskFileResource(Resource):
+    @jwt_required()
+    def post(self):
+        try:
+            registry_log("INFO", f"<=================== Inicio de la creación de la tarea ===================>")
+            # Validacion de parametros de entrada
+            if not 'fileName' in request.files:
+                return {"msg": "Parámetros de entrada invalidos. El parámetro 'fileName' es obligatorio."}, 400
+
+            if not 'newFormat' in request.form:
+                return {"msg": "Parámetros de entrada invalidos. El parámetro 'newFormat' es obligatorio."}, 400
+
+            fileNewFormat = request.form['newFormat']
+
+            if not fileNewFormat in ALLOWED_EXTENSIONS:
+                return {"msg": f"Solo se permiten los siguiente formatos [{ALLOWED_EXTENSIONS}]"}, 400
+
+            # Obtenemos el archivo
+            file = request.files['fileName']
+            dataFile = file.filename
+            registry_log("INFO", f"==> Nombre original del archivo recibido [{dataFile}]")
+            fileNameSanitized = secure_filename(file.filename)
+            registry_log("INFO", f"==> Nombre sanitizado del archivo recibido [{fileNameSanitized}]")
+            id_user = get_jwt_identity()
+            
+            # Validacion si existe el directory de archivos sino lo creamos
+            if not os.path.exists(FILES_PATH):
+                os.makedirs(FILES_PATH)
+            registry_log("INFO", f"==> Se crea directorio [{FILES_PATH}]")
+            
+            # Validacion si existe el directory del usuario sino lo creamos
+            USER_FILES_PATH = f"{FILES_PATH}{id_user}{SEPARATOR_SO}{ORIGIN_PATH_FILES}{SEPARATOR_SO}"
+            if not os.path.exists(USER_FILES_PATH):
+                os.makedirs(USER_FILES_PATH)
+            registry_log("INFO", f"==> Se crea directorio [{USER_FILES_PATH}]")
+            
+            
+            # Generamos el prefijo para el archivo
+            prefix = f"{random_letters(MAX_LETTERS)}_"
+            fileNameSanitized = f"{prefix}{fileNameSanitized}"
+            # Subimos el archivo 
+            file.save(f"{USER_FILES_PATH}{fileNameSanitized}")   
+            
+            # Guardamos la informacion del archivo
+            fileName = fileNameSanitized.rsplit('.', 1)[0]
+            dataFile = dataFile.split('.')
+            fileFormat = dataFile[-1]
+            # Registramos tarea en BD
+            newTask = Task(file_name=fileName, file_format=f".{fileFormat}",
+                           file_new_format=formatHomologation(fileNewFormat),
+                           file_origin_path=f"{USER_FILES_PATH}{fileNameSanitized}", status='uploaded',
+                           mimetype=file.mimetype, id_user=id_user)
+            db.session.add(newTask)
+            db.session.commit()
+            registry_log("INFO", f"==> Se registra tarea en BD [{task_schema.dump(newTask)}]")
+            # Enviamos de tarea asincrona
+            args = (task_schema.dump(newTask))
+            registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ [{BROKER_URL}] el siguiente mensaje [{str(args)}]")
+            send_async_task.delay(args)
+            # Retornamos respuesta exitosa
+            registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
+            return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
+        except Exception as e:
+            traceback.print_stack()
+            registry_log("ERROR", f"==> {str(e)}")
+            registry_log("ERROR", f"<=================== Fin de la creación de la tarea ===================>")
+            return {"msg": str(e)}, 500
+
+    @jwt_required()
+    def get(self):
+        queryParams = request.args
+        tasks = tasks_schema.dump(Task.query.all())
+        try:
+            if int(queryParams['order']) == 1:
+                tasks = sorted(tasks, key=lambda d: d["id"], reverse=True)
+            else:
+                tasks = sorted(tasks, key=lambda d: d["id"], reverse=False)
+            
+            if 'max' in queryParams:
+                tasks = tasks[: int(queryParams["max"])]
+            
+            return tasks                    
+        except Exception as e:
+            return {"msg": str(e)}, 500
+    
+    # @jwt_required()
+    def put(self):
+        registry_log("INFO", f"<=================== Inicio de la actualización de tareas ===================>")
+        try:
+            data = request.json
+            # Validamos la tarea
+            updateTask = Task.query.filter(Task.id == int(data['id_task'])).first()
+            if updateTask is None:
+                raise Exception(f"La tarea [{data['id_task']}] no se encuentra registrada")
+            
+            # Actualizamos tarea en BD
+            updateTask.updated = datetime.now()
+            updateTask.file_convert_path = data["file_convert_path"]
+            updateTask.status = 'processed'
+            db.session.commit()
+            registry_log("INFO", f"==> Se actualiza la tarea en BD [{task_schema.dump(updateTask)}]")
+            return {"msg": f"La tarea con el id [{data['id_task']}] fue actualizada correctamente"}
+        except Exception as e:
+            traceback.print_stack()
+            registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
+            registry_log("ERROR", f"<=================== Fin de la actualización de tareas ===================>")
+            return {"msg": str(e)}, 500
+    
+    
+class ConvertTaskFileByIdResource(Resource):
+    @jwt_required()
+    def delete(self, id_task):
+        registry_log("INFO", f"<=================== Inicio de la eliminación de tareas ===================>")
+        try:
+            # Se consulta la tarea con base al id
+            registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
+            task = Task.query.filter(Task.id == id_task).first()
+            # Se valida si no existe la tarea
+            registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
+            if task is None:
+                registry_log("ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
+                registry_log("ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+                return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
+            # Se elimina la tarea             
+            db.session.delete(task)
+            db.session.commit()
+            registry_log("INFO", f"==> La tarea con el id [{id_task}] fue eliminada correctamente")
+            registry_log("INFO", f"<=================== Fin de la eliminación de tareas ===================>")
+            return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
+        except Exception as e:
+            traceback.print_stack()
+            registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
+            registry_log("ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+            return {"msg": str(e)}, 500
+    
+    # @jwt_required()    
+    def get(self, id_task):
+        return task_schema.dump(Task.query.get_or_404(id_task))
+
+# Clase que contiene la logica para descargar los archivos
+class FileDownloadResource(Resource):
+    @jwt_required()
+    def get(id_file, id_task):
+        registry_log("INFO", f"<=================== Inicio de la descarga de archivos ===================>")
+        try:
+            # Se valida si viene fileType
+            queryParams = request.args
+            if not 'fileType' in queryParams:
+                registry_log("ERROR", f"==> El parámetros fileType es obligatorio")
+                registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+                return {"msg": f"El parámetros fileType es obligatorio"}, 400
+            
+            # Se valida el tipo de archivo a retornar
+            fileType = queryParams["fileType"]
+            if fileType != 'original' and fileType != 'compressed':
+                registry_log("ERROR", f"==> Solo se permiten los siguiente formatos [original, compressed]")
+                registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+                return {"msg": f"Solo se permiten los siguiente formatos [original, compressed]"}, 400
+            
+            # Se consulta la tarea con base al id
+            registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
+            task = Task.query.filter(Task.id == id_task).first()
+            # Se valida si no existe la tarea
+            registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
+            if task is None:
+                registry_log("ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
+                registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+                return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
+            
+            pathFileToDownload = None
+            # Descargamos el archivo
+            if fileType == 'original':
+                pathFileToDownload = task.file_origin_path
+            else:
+                pathFileToDownload = task.file_convert_path
+            
+            registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
+            registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
+            # return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
+            return send_file(pathFileToDownload, as_attachment=True)
+        except Exception as e:
+            traceback.print_stack()
+            registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
+            registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+            return {"msg": str(e)}, 500
+
+# Funcion para envio de tareas asincronas
+@celery.task(name=CELERY_TASK_NAME)
+def send_async_task(args):
+    registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ el siguiente mensaje [{str(args)}]")
+
+# Funcion que permite generar letras aleatorias
+def random_letters(max):
+       return ''.join(random.choice(string.ascii_letters) for x in range(max))
+
+
+# Funcion para resgitrar logs
+def registry_log(severity, message):
+    with open(LOG_FILE, 'a') as file:
+        file.write(
+            f"[{severity}]-[{datetime.now()}]-[{message}]\n")
+
+# Funcion para homologar formatos de conversion
+def formatHomologation(format):
+    formatHomologated = ''
+    if format == 'zip':
+        formatHomologated = '.zip'
+    if format == '7z':
+        formatHomologated = '.7z'
+    if format == 'tgz':
+        formatHomologated = '.tar.gz'
+    if format == 'tbz':
+        formatHomologated = '.tar.bz2'
+    return formatHomologated
+
+
+
