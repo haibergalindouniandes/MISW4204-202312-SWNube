@@ -960,7 +960,7 @@
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
-                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MjE5MjY3NiwianRpIjoiYWI3Y2I3OTAtYjQzNS00MWZmLWFjMmMtZjc3ZWI0YjVmMDAxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgyMTkyNjc2LCJleHAiOjE2ODIxOTM1NzZ9.4bGBe7NWDaoH6mC0bzh_CQiwCCBxW6F9qVR1uL7uTwI</stringProp>
+                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MjIxNjgwNywianRpIjoiZjhiZDJlY2ItODkzYS00YTI0LWExZGYtY2VkZmRmZjZiZjBkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgyMjE2ODA3LCJleHAiOjE2ODIyMTc3MDd9.W1NrQJxPilG_qsmAS38LEW029wHJOErkWg_lELG3V4E</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
