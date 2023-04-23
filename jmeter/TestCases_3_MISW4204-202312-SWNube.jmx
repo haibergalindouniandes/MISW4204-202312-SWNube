@@ -18,7 +18,7 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <intProp name="LoopController.loops">-1</intProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">15</stringProp>
+        <stringProp name="ThreadGroup.num_threads">20</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
         <stringProp name="ThreadGroup.duration">60</stringProp>
@@ -66,7 +66,7 @@
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
-                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MjE5MjY3NiwianRpIjoiYWI3Y2I3OTAtYjQzNS00MWZmLWFjMmMtZjc3ZWI0YjVmMDAxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgyMTkyNjc2LCJleHAiOjE2ODIxOTM1NzZ9.4bGBe7NWDaoH6mC0bzh_CQiwCCBxW6F9qVR1uL7uTwI</stringProp>
+                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MjIxODI5NCwianRpIjoiNDNmZTg0YjAtNGYwZS00ODhmLWI0NzMtNjgwNmJiMzJlZDY4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgyMjE4Mjk0LCJleHAiOjE2ODIyMTkxOTR9.Cu_8txj4FwUilX9ZaEOv-pK-oUfbI2odAdSEfAwKHPU</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
