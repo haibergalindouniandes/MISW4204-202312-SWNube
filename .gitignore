@@ -1,7 +1,7 @@
 # Customizated
 ftp/
 log_worker.txt
-log_tasks.txt
+log_services.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

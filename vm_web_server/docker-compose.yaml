@@ -1,0 +1,49 @@
+version: "3.2"
+services:
+  mcs_converter:
+    restart: always
+    image: mcs_converter:latest
+    privileged: true
+    environment:
+      - DB_HOST=34.86.0.243
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=dbpass
+      - DB_PORT=5432
+      - SEPARATOR_SO=/
+      - RABBIT_HOST=34.71.210.148
+      - HOME_PATH=/mnt/nfs_clientshare
+    command: sh run_commands.sh
+    volumes:
+      # - ./services/:/backend/
+      - nfs_shared:/mnt/nfs_clientshare/      
+    build: ./services
+    working_dir: /backend/
+    container_name: mcs_converter
+    networks:
+      - convert_network
+  
+  nginx_proxy:
+    image: nginx:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    container_name: nginx_proxy
+    restart: always
+    networks:
+      - convert_network
+    depends_on:
+      - mcs_converter
+
+volumes:
+  nfs_shared:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+      device: ":/mnt/nfs_share/"
+
+networks:
+  convert_network:
+    driver: bridge

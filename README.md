@@ -15,29 +15,6 @@
 
 Este proyecto tiene como objetivo brindar las funcionalidades que permitan la creación de cuentas de usuario, subir archivos en un formato especifico, crear tareas de conversión de formato (zip, 7zip, tar.gz, tar.bz2), convertir dichos archivos al formato deseado, consultar el estado de la tarea de conversión y descargar los archivos (original o convertido). 
 
-## Arquitectura del proyecto
-
-### Vista de contexto
-
-<img src="https://user-images.githubusercontent.com/110913673/232339273-2ff1d417-6aee-47cb-90d6-b0ffae5343fc.png" alt="Vista_contexto" style="zoom:75%;" />
-
-### Vista funcional
-
-<img src="https://user-images.githubusercontent.com/110913673/232339339-b1eb6bde-9ea1-49bd-b352-7aecb81e2992.png" alt="Vista_funcional" style="zoom:75%;" />
-
-### Vista de información
-#### Modelo de información
-
-<img src="https://user-images.githubusercontent.com/110913673/232339391-b32ccaf3-597e-4285-a641-2b358f488c28.png" alt="Modelo_informacion" style="zoom:75%;" />
-
-#### Flujo de navegación
-
-<img src="https://user-images.githubusercontent.com/110913673/232339408-da0898ba-8efd-499c-81b8-1b37682ea838.png" alt="flujo_navegacion" style="zoom:75%;" />
-
-### Vista de despliegue
-
-<img src="https://user-images.githubusercontent.com/110913673/232339420-2d9592d8-cf77-4b58-9e9b-3b7fa5c8d409.png" alt="vista_despliegue" style="zoom:75%;" />
-
 ### Descripción de componentes utilizados en el proyecto
 #### NGINX
 
@@ -70,9 +47,6 @@ Software de negociación de mensajes de código abierto que funciona como un bro
 
 Plataforma de contenerización de código abierto. Permite a los empaquetar aplicaciones en contenedores: componentes ejecutables estandarizados que combinan el código fuente de la aplicación con las bibliotecas del sistema operativo (SO) y las dependencias necesarias para ejecutar dicho código en cualquier entorno
 
-#### New Relic APM
-
-Herramienta de medición del rendimiento de una infraestructura de servicios, desde backend hasta frontend: medición del rendimiento de navegadores, APIs, servidores, aplicaciones móviles
 
 ### Estructura de carpetas del proyecto
 
@@ -92,44 +66,9 @@ El proyecto esta compuesto por la siguiente estructura de carpetas:
 
 - **vm:** En esta carpeta se encuentra el README.md que contiene la información para realizar la descarga, configuración y lanzamiento de la maquina virtual que contiene todo el proyecto funcional
 
+### Arquitectura del proyecto - Entrega 2
+[Proyecto.1.entrega.2.-.Arquitectura.conclusiones.y.consideraciones.pdf](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/files/11305273/Proyecto.1.entrega.2.-.Arquitectura.conclusiones.y.consideraciones.pdf)
 
-## Instalación de componentes:
-- En primera instancia se debe tener instalado **Docker**. Para esto se comparten los siguientes enlaces:
-  - **Instalación de docker en Windows**: https://docs.docker.com/desktop/install/windows-install
-  - **Instalación de docker en Linux Ubuntu**: https://docs.docker.com/engine/install/ubuntu
-  - **Instalación de docker en Mac**: https://docs.docker.
-  - Se debe clonar el proyecto **MISW4204-202312-SWNube**: [Repositorio](https://github.com/shiomar-salazar/MISW4204-202312-SWNube)
-  
-- **Docker**:
-  - Desde la raiz del proyecto, se debe ejecutar en una terminal el siguiente comando **`docker compose up -d`** para que docker a través del archivo **`docker-compose.yaml`** realice la creación de las imagenes y el despliegue de los contenedores. Y esperamos a que las instancias queden arriba:
+### Resultados Prueba de Capacidad - Entrega 2
+[Escenario y Pruebas de Estrés API REST y Batch.pdf](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/files/11305274/Escenario.y.Pruebas.de.Estres.API.REST.y.Batch.pdf)
 
-<img src="https://user-images.githubusercontent.com/110913673/232261466-389ebce9-0214-4644-8ab7-5f30d0375300.png" alt="Comando_docker_compose" style="zoom:75%;" />
-  
-- **JMeter**:
-
-Para realizar la descarga de JMeter se puede hacer desde la página oficial [Descarga JMeter](https://jmeter.apache.org/download_jmeter.cgi)
-<br/>
-Una vez realizada la descarga y descompresión de los archivos -> Ir a la carpeta **`bin`** donde se instalo JMeter y ejecutar el archivo **`jmeter.bat`**.
-
-<img src="https://user-images.githubusercontent.com/110913673/221445381-c93eefe5-b9c1-40eb-9d31-daf2de0bcacc.png" alt="jmeter" style="zoom:75%;" />
-
-Una vez abierto JMeter ir a **`File`** -> **`Open`**.
-
-<img src="https://user-images.githubusercontent.com/110913673/221445579-d0d7dd73-03d1-4ac6-908c-e716b8ea956d.png" alt="import_proyecto_jmeter" style="zoom:75%;" />
-
-Seleccionamos el archivo de prueba del caso a lanzar **`TestCases_1_MISW4204-202312-SWNube.jmx o TestCases_2_MISW4204-202312-SWNube.jmx`** que se encuentra en la ruta **`MISW4204-202312-SWNube/jmeter`**.
-
-<img src="https://user-images.githubusercontent.com/110913673/232346888-e9eef331-a21b-4e98-9a59-75ad51f0467c.png" alt="import_proyecto_jmeter" style="zoom:75%;" />
-
-Por ultimo se ejecuta las pruebas.
-
-<img src="https://user-images.githubusercontent.com/110913673/221446161-bda2d2ba-2fe6-41cb-9c9e-6338cac4f3d5.png" alt="ejecucion_pruebas" style="zoom:75%;" />
-
-- **Máquina virtual**:
-
-Como prerequisito se debe tener instalado VirtualBox y se puede descarga desde la página oficial Descarga [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-<br/>
-
-Para realizar la instalación y configuración de la máquina virtual, la cual contiene todo el ambiente ya configurado para la ejecución de la aplicación. Se debe seguir la información consignada en el [README.md](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/tree/development/vm)
-
-<img src="https://user-images.githubusercontent.com/110913673/231838904-3807ce00-8c40-43fb-9680-8e946bdaa72e.png" alt="Iniciar_VM" style="zoom:75%;" />
