@@ -66,6 +66,9 @@ El proyecto esta compuesto por la siguiente estructura de carpetas:
 
 - **vm:** En esta carpeta se encuentra el README.md que contiene la información para realizar la descarga, configuración y lanzamiento de la maquina virtual que contiene todo el proyecto funcional
 
+### Documentacion de Postman
+https://documenter.getpostman.com/view/5238096/2s93Y5Nef1
+
 ### Arquitectura del proyecto - Entrega 2
 [Proyecto.1.entrega.2.-.Arquitectura.conclusiones.y.consideraciones.pdf](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/files/11305273/Proyecto.1.entrega.2.-.Arquitectura.conclusiones.y.consideraciones.pdf)
 
