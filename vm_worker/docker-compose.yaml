@@ -17,16 +17,16 @@ services:
     privileged: true
     environment:
       - C_FORCE_ROOT=true
-      - HOME_PATH=/mnt/nfs_clientshare
+      - HOME_PATH=/home/stonejfg/misw-cloud-storage
       - SEPARATOR_SO=/
-      - DB_HOST=34.86.0.243
+      - DB_HOST=34.135.240.95
       - DB_USER=postgres
       - DB_PASS=dbpass
       - DB_NAME=postgres
     build: .
     working_dir: /backend/
     volumes:
-      - nfs_shared:/mnt/nfs_clientshare/
+      - nfs_shared:/home/stonejfg/misw-cloud-storage
     command: celery -A worker.celery worker --pool=solo -l info
     container_name: celery_worker
     restart: always
@@ -40,8 +40,8 @@ volumes:
     driver: local
     driver_opts:
       type: "nfs"
-      o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
-      device: ":/mnt/nfs_share/"
+      o: "addr=misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+      device: ":/home/stonejfg/misw-cloud-storage"
 
 networks:
   convert_network:
