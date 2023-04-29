@@ -37,7 +37,7 @@ services:
     depends_on:
       - mcs_converter
 
-<<<<<<< HEAD
+
 #volumes:
 #  nfs_shared:
 #    driver: local
@@ -45,15 +45,7 @@ services:
 #      type: "nfs"
 #      o: "addr=gs://misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
 #      device: ":/home/stonejfg/misw-cloud-storage"
-=======
-volumes:
-  nfs_shared:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=gs://misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
-      device: ":/home/stonejfg/misw-cloud-storage"
->>>>>>> 54fe1a7867e12e950cfb720549663b25b44adba8
+
 
 networks:
   convert_network:
