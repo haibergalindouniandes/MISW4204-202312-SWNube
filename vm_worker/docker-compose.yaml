@@ -26,7 +26,8 @@ services:
     build: .
     working_dir: /backend/
     volumes:
-      - nfs_shared:/home/stonejfg/misw-cloud-storage
+      #- nfs_shared:/home/stonejfg/misw-cloud-storage
+      - /home/stonejfg/misw-cloud-storage:/home/stonejfg/misw-cloud-storage
     command: celery -A worker.celery worker --pool=solo -l info
     container_name: celery_worker
     restart: always
@@ -35,13 +36,13 @@ services:
     depends_on:
       - rabbitmq_broker
 
-volumes:
-  nfs_shared:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
-      device: ":/home/stonejfg/misw-cloud-storage"
+#volumes:
+#  nfs_shared:
+#    driver: local
+#    driver_opts:
+#      type: "nfs"
+#      o: "addr=gs://misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+#      device: ":/home/stonejfg/misw-cloud-storage"
 
 networks:
   convert_network:
