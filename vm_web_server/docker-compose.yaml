@@ -41,7 +41,7 @@ volumes:
     driver: local
     driver_opts:
       type: "nfs"
-      o: "addr=misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+      o: "addr=gs://misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
       device: ":/home/stonejfg/misw-cloud-storage"
 
 networks:
