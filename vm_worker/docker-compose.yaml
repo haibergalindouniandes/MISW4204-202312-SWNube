@@ -27,7 +27,7 @@ services:
     working_dir: /backend/
     volumes:
       #- nfs_shared:/home/stonejfg/misw-cloud-storage
-      - /home/stonejfg/misw-cloud-storage:/home/stonejfg/misw-cloud-storage
+      - ./:/home/stonejfg/misw-cloud-storage
     command: celery -A worker.celery worker --pool=solo -l info
     container_name: celery_worker
     restart: always

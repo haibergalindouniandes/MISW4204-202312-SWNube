@@ -12,15 +12,17 @@ services:
       - DB_PORT=5432
       - SEPARATOR_SO=/
       - RABBIT_HOST=10.128.0.6
-      - HOME_PATH=/home/stonejfg/misw-cloud-storage
+      - HOME_PATH=/home/misw-cloud-storage
     command: sh run_commands.sh
     volumes:
       # - ./services/:/backend/
       #- nfs_shared:/home/stonejfg/misw-cloud-storage
-      - /home/stonejfg/misw-cloud-storage:/home/stonejfg/misw-cloud-storage
+      - ./services/:/home/misw-cloud-storage
     build: ./services
     working_dir: /backend/
     container_name: mcs_converter
+    #devices:
+    #- "/home/stonejfg/misw-cloud-storage:/home/stonejfg/misw-cloud-storage"
     networks:
       - convert_network
   
