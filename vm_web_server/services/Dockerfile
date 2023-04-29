@@ -18,6 +18,6 @@ RUN pip install -r requirements.txt
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 # Make dir nfs
-RUN mkdir -p /mnt/nfs_clientshare
+RUN mkdir -p /home/stonejfg/misw-cloud-storage
 # Expose port 8080 to the outside world
 EXPOSE 5000

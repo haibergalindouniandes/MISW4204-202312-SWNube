@@ -5,18 +5,18 @@ services:
     image: mcs_converter:latest
     privileged: true
     environment:
-      - DB_HOST=34.86.0.243
+      - DB_HOST=34.135.240.95
       - DB_NAME=postgres
       - DB_USER=postgres
       - DB_PASSWORD=dbpass
       - DB_PORT=5432
       - SEPARATOR_SO=/
-      - RABBIT_HOST=34.71.210.148
-      - HOME_PATH=/mnt/nfs_clientshare
+      - RABBIT_HOST=10.128.0.6
+      - HOME_PATH=/home/stonejfg/misw-cloud-storage
     command: sh run_commands.sh
     volumes:
       # - ./services/:/backend/
-      - nfs_shared:/mnt/nfs_clientshare/      
+      - nfs_shared:/home/stonejfg/misw-cloud-storage      
     build: ./services
     working_dir: /backend/
     container_name: mcs_converter
@@ -41,8 +41,8 @@ volumes:
     driver: local
     driver_opts:
       type: "nfs"
-      o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
-      device: ":/mnt/nfs_share/"
+      o: "addr=misw-cloud-storage,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+      device: ":/home/stonejfg/misw-cloud-storage"
 
 networks:
   convert_network:
