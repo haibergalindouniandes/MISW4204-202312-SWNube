@@ -28,6 +28,7 @@ MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
 BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-app")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 FILES_PATH = f"files{SEPARATOR_SO}"
+PATH_PRIVATE_KEY = os.getenv("PATH_PRIVATE_KEY", default="dauntless-bay-384421-56876ce150d4.json")
 
 # Configuramos Celery
 celery = Celery(CELERY_TASK_NAME, broker=BROKER_URL)
@@ -298,9 +299,7 @@ def send_async_task(args):
 # Funcion que permite conectarnos a google storage
 def connect_storage():
     # Nos Autenticamos con el service account private key
-    # path_to_private_key = './dauntless-bay-384421-56876ce150d4.json'
-    path_to_private_key = 'dauntless-bay-384421-56876ce150d4.json'
-    return storage.Client.from_service_account_json(path_to_private_key)
+    return storage.Client.from_service_account_json(PATH_PRIVATE_KEY)
 
 # Funcion que permite subir un archivo al bucket
 def upload_file(file, userFilesPath, fileNameSanitized):
