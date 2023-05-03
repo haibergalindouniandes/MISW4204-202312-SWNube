@@ -3,6 +3,7 @@ services:
   rabbitmq_broker:
     image: "rabbitmq:3.9.13-management"
     container_name: rabbitmq_broker
+    restart: always
     ports:
       - "5672:5672"
       - "15672:15672"
