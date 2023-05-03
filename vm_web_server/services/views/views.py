@@ -284,7 +284,6 @@ class FileDownloadResource(Resource):
                 registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
                 registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
                 return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
-                # return send_file(temp.name, as_attachment=True)
         except Exception as e:
             traceback.print_stack()
             registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
