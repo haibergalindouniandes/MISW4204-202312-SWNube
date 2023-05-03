@@ -276,10 +276,17 @@ class FileDownloadResource(Resource):
                 extensionFileToDownload = task.file_new_format
             
             # Descargamos el archivo temporalmente
-            fileDownloaded = download_file(pathFileToDownload)
+            # Nos conectamos al bucket
+            client = connect_storage()
+            bucket = storage.Bucket(client, BUCKET_GOOGLE)
+            blob = bucket.blob(pathFileToDownload)
+            # Descargamos temporalmente el archivo
+            with tempfile.NamedTemporaryFile() as temp:
+                blob.download_to_filename(temp.name)  
+                
             registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
             registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
-            return send_file(fileDownloaded.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
+            return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
         except Exception as e:
             traceback.print_stack()
             registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
@@ -304,18 +311,6 @@ def upload_file(file, userFilesPath, fileNameSanitized):
     blob = bucket.blob(f"{userFilesPath}{fileNameSanitized}")
     blob.upload_from_string(file.read(), content_type=file.content_type)
     
-# Funcion que permite subir un archivo al bucket
-def download_file(pathFileToDownload):
-    # Nos conectamos al bucket
-    client = connect_storage()
-    bucket = storage.Bucket(client, BUCKET_GOOGLE)
-    blob = bucket.blob(pathFileToDownload)
-    # Descargamos temporalmente el archivo
-    with tempfile.NamedTemporaryFile() as temp:
-        blob.download_to_filename(temp.name)   
-    
-    return temp
-
 # Funcion que permite registrar tarea en BD
 def registry_task_to_db(fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, fileMimetype, idUser):
     # Registramos tarea en BD
