@@ -298,8 +298,9 @@ def send_async_task(args):
 # Funcion que permite conectarnos a google storage
 def connect_storage():
     # Nos Autenticamos con el service account private key
-    path_to_private_key = './dauntless-bay-384421-56876ce150d4.json'
-    return storage.Client.from_service_account_json(json_credentials_path=path_to_private_key)
+    # path_to_private_key = './dauntless-bay-384421-56876ce150d4.json'
+    path_to_private_key = 'dauntless-bay-384421-56876ce150d4.json'
+    return storage.Client.from_service_account_json(path_to_private_key)
 
 # Funcion que permite subir un archivo al bucket
 def upload_file(file, userFilesPath, fileNameSanitized):
