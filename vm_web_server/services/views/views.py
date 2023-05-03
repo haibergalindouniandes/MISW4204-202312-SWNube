@@ -2,7 +2,9 @@ import hashlib
 import os
 import random
 import string
+import socket
 import traceback
+import tempfile
 from datetime import datetime
 from celery import Celery
 from flask import request, send_file
@@ -10,21 +12,22 @@ from models import db, User, UserSchema, Task, TaskSchema
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
+from google.cloud import storage
 
 # Constantes
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
 RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
 RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
-RABBIT_HOST = os.getenv("RABBIT_HOST", default="35.192.44.77")
+RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
 RABBIT_PORT = os.getenv("RABBIT_PORT", default=15672)
 CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
 BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
-HOME_PATH = os.getenv("HOME_PATH", default=os.getcwd())
+BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-app")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
-FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
+FILES_PATH = f"files{SEPARATOR_SO}"
 
 # Configuramos Celery
 celery = Celery(CELERY_TASK_NAME, broker=BROKER_URL)
@@ -34,28 +37,47 @@ users_schema = UserSchema(many=True)
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
 
+# Clase que retorna el estado del servicio
+class HealthCheckResource(Resource):
+    def get(self):
+        hostIp = socket.gethostbyname(socket.gethostname())
+        hostName = socket.gethostname()
+        timestamp = datetime.now()
+        remoteIp = None
+        if request.remote_addr:
+            remoteIp = request.remote_addr
+        elif request.environ['REMOTE_ADDR']:
+            remoteIp = request.remote_addr
+        else:
+            remoteIp = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+        
+        return {"host_name": hostName, "host_ip": hostIp, "remote_ip": remoteIp, "timestamp": str(timestamp)}
 
 # Clase que contiene la logica para solicitar el token
 class AuthLogInResource(Resource):
     def post(self):
-        password_encriptada = hashlib.md5(
-            request.json["password"].encode("utf-8")
-        ).hexdigest()
-        usuario = User.query.filter(
-            User.username == request.json["username"],
-            User.password == password_encriptada,
-        ).first()
-        
-        if usuario is None:
-            return {"msg": "Usuario o contraseña invalida"}, 409
-        
-        token_de_acceso = create_access_token(identity=usuario.id)
-        return {
-            "msg": "Inicio de sesión exitoso",
-            "username": usuario.username,
-            "token": token_de_acceso,
-        }
+        try:
+            password_encriptada = hashlib.md5(
+                request.json["password"].encode("utf-8")
+            ).hexdigest()
+            usuario = User.query.filter(
+                User.username == request.json["username"],
+                User.password == password_encriptada,
+            ).first()
 
+            if usuario is None:
+                return {"msg": "Usuario o contraseña invalida"}, 409
+
+            token_de_acceso = create_access_token(identity=usuario.id)
+            return {
+                "msg": "Inicio de sesión exitoso",
+                "username": usuario.username,
+                "token": token_de_acceso,
+            }
+        except Exception as e:
+            traceback.print_stack()
+            return {"msg": str(e)}, 500
+        
 # Clase que contiene la logica para registrar un usuario nuevo
 class AuthSignUpResource(Resource):
     def post(self):
@@ -107,37 +129,26 @@ class ConvertTaskFileResource(Resource):
             registry_log("INFO", f"==> Nombre original del archivo recibido [{dataFile}]")
             fileNameSanitized = secure_filename(file.filename)
             registry_log("INFO", f"==> Nombre sanitizado del archivo recibido [{fileNameSanitized}]")
-            id_user = get_jwt_identity()
+            idUser = get_jwt_identity()
             
-            # Validacion si existe el directory de archivos sino lo creamos
-            if not os.path.exists(FILES_PATH):
-                os.makedirs(FILES_PATH)
-            registry_log("INFO", f"==> Se crea directorio [{FILES_PATH}]")
-            
-            # Validacion si existe el directory del usuario sino lo creamos
-            USER_FILES_PATH = f"{FILES_PATH}{id_user}{SEPARATOR_SO}{ORIGIN_PATH_FILES}{SEPARATOR_SO}"
-            if not os.path.exists(USER_FILES_PATH):
-                os.makedirs(USER_FILES_PATH)
-            registry_log("INFO", f"==> Se crea directorio [{USER_FILES_PATH}]")
-            
+            # Generamos el path del archivo
+            userFilesPath = f"{FILES_PATH}{idUser}{SEPARATOR_SO}{ORIGIN_PATH_FILES}{SEPARATOR_SO}"
             
             # Generamos el prefijo para el archivo
             prefix = f"{random_letters(MAX_LETTERS)}_"
             fileNameSanitized = f"{prefix}{fileNameSanitized}"
-            # Subimos el archivo 
-            file.save(f"{USER_FILES_PATH}{fileNameSanitized}")   
             
-            # Guardamos la informacion del archivo
+            # Subimos el archivo 
+            upload_file(file, userFilesPath, fileNameSanitized)
+            
+            # Obtenemos información del archivo
             fileName = fileNameSanitized.rsplit('.', 1)[0]
             dataFile = dataFile.split('.')
             fileFormat = dataFile[-1]
-            # Registramos tarea en BD
-            newTask = Task(file_name=fileName, file_format=f".{fileFormat}",
-                           file_new_format=formatHomologation(fileNewFormat),
-                           file_origin_path=f"{USER_FILES_PATH}{fileNameSanitized}", status='uploaded',
-                           mimetype=file.mimetype, id_user=id_user)
-            db.session.add(newTask)
-            db.session.commit()
+            
+            # Guardamos la informacion del archivo en DB
+            newTask = registry_task_to_db(fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, file.mimetype, idUser)
+            
             registry_log("INFO", f"==> Se registra tarea en BD [{task_schema.dump(newTask)}]")
             # Enviamos de tarea asincrona
             args = (task_schema.dump(newTask))
@@ -254,16 +265,25 @@ class FileDownloadResource(Resource):
                 return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
             
             pathFileToDownload = None
+            extensionFileToDownload = None
             # Descargamos el archivo
             if fileType == 'original':
                 pathFileToDownload = task.file_origin_path
+                extensionFileToDownload = task.file_format
             else:
                 pathFileToDownload = task.file_convert_path
+                extensionFileToDownload = task.file_new_format
             
-            registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
-            registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
-            # return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
-            return send_file(pathFileToDownload, as_attachment=True)
+            client = connect_storage()
+            # Nos conectamos al bucket
+            bucket = storage.Bucket(client, BUCKET_GOOGLE)
+            blob = bucket.blob(pathFileToDownload)
+            with tempfile.NamedTemporaryFile() as temp:
+                blob.download_to_filename(temp.name)
+                registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
+                registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
+                return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
+                # return send_file(temp.name, as_attachment=True)
         except Exception as e:
             traceback.print_stack()
             registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
@@ -275,10 +295,34 @@ class FileDownloadResource(Resource):
 def send_async_task(args):
     registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ el siguiente mensaje [{str(args)}]")
 
+# Funcion que permite conectarnos a google storage
+def connect_storage():
+    # Nos Autenticamos con el service account private key
+    path_to_private_key = './dauntless-bay-384421-56876ce150d4.json'
+    return storage.Client.from_service_account_json(json_credentials_path=path_to_private_key)
+
+# Funcion que permite subir un archivo al bucket
+def upload_file(file, userFilesPath, fileNameSanitized):
+    client = connect_storage()
+    # Nos conectamos al bucket
+    bucket = storage.Bucket(client, BUCKET_GOOGLE)
+    blob = bucket.blob(f"{userFilesPath}{fileNameSanitized}")
+    blob.upload_from_string(file.read(), content_type=file.content_type)
+
+# Funcion que permite registrar tarea en BD
+def registry_task_to_db(fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, fileMimetype, idUser):
+    # Registramos tarea en BD
+    newTask = Task(file_name=fileName, file_format=f".{fileFormat}",
+                    file_new_format=formatHomologation(fileNewFormat),
+                    file_origin_path=f"{userFilesPath}{fileNameSanitized}", status='uploaded',
+                    mimetype=fileMimetype, id_user=idUser)
+    db.session.add(newTask)
+    db.session.commit()
+    return newTask    
+
 # Funcion que permite generar letras aleatorias
 def random_letters(max):
        return ''.join(random.choice(string.ascii_letters) for x in range(max))
-
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):

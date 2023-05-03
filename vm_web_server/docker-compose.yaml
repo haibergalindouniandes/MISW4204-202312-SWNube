@@ -1,48 +1,122 @@
+# version: "3.2"
+# services:
+#   mcs_converter:
+#     restart: always
+#     image: mcs_converter:latest
+#     privileged: true
+#     environment:
+#       - DB_HOST=34.86.0.243
+#       - DB_NAME=postgres
+#       - DB_USER=postgres
+#       - DB_PASSWORD=dbpass
+#       - DB_PORT=5432
+#       - SEPARATOR_SO=/
+#       - RABBIT_HOST=34.71.210.148
+#       - HOME_PATH=/mnt/nfs_clientshare
+#     command: sh run_commands.sh
+#     volumes:
+#       # - ./services/:/backend/
+#       - nfs_shared:/mnt/nfs_clientshare/      
+#     build: ./services
+#     working_dir: /backend/
+#     container_name: mcs_converter
+#     networks:
+#       - convert_network
+  
+#   nginx_proxy:
+#     image: nginx:latest
+#     ports:
+#       - 8080:8080
+#     volumes:
+#       - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+#     container_name: nginx_proxy
+#     restart: always
+#     networks:
+#       - convert_network
+#     depends_on:
+#       - mcs_converter
+
+# volumes:
+#   nfs_shared:
+#     driver: local
+#     driver_opts:
+#       type: "nfs"
+#       o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
+#       device: ":/mnt/nfs_share/"
+
+# networks:
+#   convert_network:
+#     driver: bridge
+
 version: "3.2"
 services:
-  mcs_converter:
+  postgres:    
+    image: postgres:latest
+    container_name: postgres
     restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dbpass
+      - PGDATA=/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - convert_network 
+
+  rabbitmq_broker:
+    image: "rabbitmq:3.9.13-management"
+    container_name: rabbitmq_broker
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=ConverterUser
+      - RABBITMQ_DEFAULT_PASS=ConverterPass
+    networks:
+      - convert_network
+    depends_on:
+      - postgres      
+
+  mcs_converter:
     image: mcs_converter:latest
+    container_name: mcs_converter
+    restart: always
     privileged: true
     environment:
-      - DB_HOST=34.86.0.243
+      - DB_HOST=postgres
       - DB_NAME=postgres
       - DB_USER=postgres
       - DB_PASSWORD=dbpass
       - DB_PORT=5432
       - SEPARATOR_SO=/
-      - RABBIT_HOST=34.71.210.148
-      - HOME_PATH=/mnt/nfs_clientshare
+      - RABBIT_HOST=rabbitmq_broker
+      - BUCKET_GOOGLE=bucket-converter-app
     command: sh run_commands.sh
-    volumes:
-      # - ./services/:/backend/
-      - nfs_shared:/mnt/nfs_clientshare/      
     build: ./services
     working_dir: /backend/
-    container_name: mcs_converter
+    volumes:
+      - ./services/:/backend/
     networks:
       - convert_network
+    depends_on:
+      - postgres
+      - rabbitmq_broker
   
   nginx_proxy:
     image: nginx:latest
+    container_name: nginx_proxy
+    restart: always
     ports:
       - 8080:8080
     volumes:
       - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
-    container_name: nginx_proxy
-    restart: always
     networks:
       - convert_network
     depends_on:
+      - postgres    
       - mcs_converter
-
-volumes:
-  nfs_shared:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
-      device: ":/mnt/nfs_share/"
 
 networks:
   convert_network:
