@@ -283,10 +283,9 @@ class FileDownloadResource(Resource):
             # Descargamos temporalmente el archivo
             with tempfile.NamedTemporaryFile() as temp:
                 blob.download_to_filename(temp.name)  
-                
-            registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
-            registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
-            return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
+                registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
+                registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
+                return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
         except Exception as e:
             traceback.print_stack()
             registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
