@@ -47,7 +47,7 @@
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">34.70.250.35</stringProp>
+          <stringProp name="HTTPSampler.domain">34.30.24.14</stringProp>
           <stringProp name="HTTPSampler.port">8080</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
@@ -66,7 +66,7 @@
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
-                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MjIwMjYwMywianRpIjoiM2VkZDQ0ZjgtYTMzYy00ZTVkLTk3OTktYTlmMDMwYWNmNWVjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgyMjAyNjAzLCJleHAiOjE2ODIyMDM1MDN9.nJVGRXD70O7avvCgmuLPtHEGowBPczLsEQCdM2u5-ys</stringProp>
+                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MjgwMTczMCwianRpIjoiYmQ0NWU5OGYtNzZjNC00N2JjLTg1NmItMzY1ZGY2ZmYyMDRkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgyODAxNzMwLCJleHAiOjE2ODI4MDI2MzB9.TyNXxwOOMXNfE2ZFg0T-mYDD_gjh9Zx-ZJl-ACblUiI</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
@@ -465,7 +465,7 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <intProp name="LoopController.loops">-1</intProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.num_threads">10</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
         <stringProp name="ThreadGroup.duration">300</stringProp>
@@ -494,7 +494,7 @@
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">34.70.250.35</stringProp>
+          <stringProp name="HTTPSampler.domain">34.117.151.5</stringProp>
           <stringProp name="HTTPSampler.port">8080</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
@@ -513,7 +513,7 @@
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Authorization</stringProp>
-                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MjIwMzY1MSwianRpIjoiZTEyOWM4NDktNzg0ZS00ZDgzLWEwMTUtZWI1MmEwZDQzMDA5IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgyMjAzNjUxLCJleHAiOjE2ODIyMDQ1NTF9.lY763d6T2T_7UNblXjpowXpKRMGEWsiaROJqI76g_Uk</stringProp>
+                <stringProp name="Header.value">Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4MzM0ODcyNSwianRpIjoiZTNmODBjYWYtOGJlYy00MDM1LTk4M2QtMTQ1M2RlZGJhMWNjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MSwibmJmIjoxNjgzMzQ4NzI1LCJleHAiOjE2ODMzNDk2MjV9.N3qdoPu4Ceix2_LNI0WEzG9EnKNWEw6W_6t4euif-Eg</stringProp>
               </elementProp>
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
