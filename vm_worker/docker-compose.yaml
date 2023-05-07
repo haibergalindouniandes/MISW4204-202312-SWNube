@@ -3,6 +3,7 @@ services:
   rabbitmq_broker:
     image: "rabbitmq:3.9.13-management"
     container_name: rabbitmq_broker
+    restart: always
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -17,16 +18,16 @@ services:
     privileged: true
     environment:
       - C_FORCE_ROOT=true
-      - HOME_PATH=/mnt/nfs_clientshare
       - SEPARATOR_SO=/
-      - DB_HOST=34.86.0.243
+      - DB_HOST=34.125.94.171
       - DB_USER=postgres
       - DB_PASS=dbpass
       - DB_NAME=postgres
+      - PATH_PRIVATE_KEY=dauntless-bay-384421-56876ce150d4.json
     build: .
     working_dir: /backend/
     volumes:
-      - nfs_shared:/mnt/nfs_clientshare/
+      - .:/backend/
     command: celery -A worker.celery worker --pool=solo -l info
     container_name: celery_worker
     restart: always
@@ -34,14 +35,6 @@ services:
       - convert_network
     depends_on:
       - rabbitmq_broker
-
-volumes:
-  nfs_shared:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=10.128.0.5,rsize=65536,wsize=65536,timeo=14,tcp,rw,noatime"
-      device: ":/mnt/nfs_share/"
 
 networks:
   convert_network:

@@ -3,7 +3,7 @@ from flask_cors import CORS
 from celery import Celery
 from flask_restful import Api
 from flask import Flask, send_from_directory, jsonify
-from views import AuthLogInResource, AuthSignUpResource, ConvertTaskFileResource, ConvertTaskFileByIdResource, FileDownloadResource
+from views import AuthLogInResource, AuthSignUpResource, ConvertTaskFileResource, ConvertTaskFileByIdResource, FileDownloadResource, HealthCheckResource
 from models import db
 from flask_jwt_extended import JWTManager
 
@@ -11,7 +11,7 @@ from flask_jwt_extended import JWTManager
 DB_DRIVER = os.getenv("DB_DRIVER", default="postgresql")
 DB_USER = os.getenv("DB_USER", default="postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD", default="dbpass")
-DB_HOST = os.getenv("DB_HOST", default="34.86.0.243")
+DB_HOST = os.getenv("DB_HOST", default="postgres")
 DB_NAME = os.getenv("DB_NAME", default="postgres")
 DB_PORT = os.getenv("DB_PORT", default=5432)
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", default="JwBGj2B4XFAKhYmn8Pgk0vH2w7UvgYfXAJ32e5rs8vI=")
@@ -33,6 +33,7 @@ db.create_all()
 api = Api(app)
 
 # Agregamos los recursos
+api.add_resource(HealthCheckResource, "/")
 api.add_resource(AuthSignUpResource, "/api/auth/signup")
 api.add_resource(AuthLogInResource, "/api/auth/login")
 api.add_resource(ConvertTaskFileResource, "/api/tasks")
