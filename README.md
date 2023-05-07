@@ -69,9 +69,4 @@ El proyecto esta compuesto por la siguiente estructura de carpetas:
 ### Documentacion de Postman
 https://documenter.getpostman.com/view/5238096/2s93Y5Nef1
 
-### Arquitectura del proyecto - Entrega 2
-[Proyecto.1.entrega.2.-.Arquitectura.conclusiones.y.consideraciones.pdf](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/files/11305273/Proyecto.1.entrega.2.-.Arquitectura.conclusiones.y.consideraciones.pdf)
-
-### Resultados Prueba de Capacidad - Entrega 2
-[Escenario y Pruebas de Estrés API REST y Batch.pdf](https://github.com/shiomar-salazar/MISW4204-202312-SWNube/files/11305274/Escenario.y.Pruebas.de.Estres.API.REST.y.Batch.pdf)
 
