@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import random
 import string
@@ -12,26 +13,21 @@ from models import db, User, UserSchema, Task, TaskSchema
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
-from google.cloud import storage
+from google.cloud import storage, pubsub_v1
+
 
 # Constantes
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
-RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
-RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
-RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
-RABBIT_PORT = os.getenv("RABBIT_PORT", default=15672)
-CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
-BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
-BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-app")
+BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-web-app")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 FILES_PATH = f"files{SEPARATOR_SO}"
-PATH_PRIVATE_KEY = os.getenv("PATH_PRIVATE_KEY", default="dauntless-bay-384421-56876ce150d4.json")
-
-# Configuramos Celery
-celery = Celery(CELERY_TASK_NAME, broker=BROKER_URL)
+PATH_BUCKET_KEY = os.getenv("PATH_BUCKET_KEY", default="misw4204-202312-swnube-bucket.json")
+PATH_PUBSUB_KEY = os.getenv("PATH_PUBSUB_KEY", default="misw4204-202312-swnube-pub-sub.json")
+PATH_TOPIC = os.getenv("PATH_TOPIC", default="projects/misw4204-202312-swnube/topics/tasks-topic")
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = PATH_PUBSUB_KEY
 # Definimos los esquemas
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -153,8 +149,8 @@ class ConvertTaskFileResource(Resource):
             registry_log("INFO", f"==> Se registra tarea en BD [{task_schema.dump(newTask)}]")
             # Enviamos de tarea asincrona
             args = (task_schema.dump(newTask))
-            registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ [{BROKER_URL}] el siguiente mensaje [{str(args)}]")
-            send_async_task.delay(args)
+            registry_log("INFO", f"==> Se envia al Topic [{PATH_TOPIC}] el siguiente mensaje [{str(args)}]")
+            publish_message(args)
             # Retornamos respuesta exitosa
             registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
@@ -292,15 +288,18 @@ class FileDownloadResource(Resource):
             registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
             return {"msg": str(e)}, 500
 
-# Funcion para envio de tareas asincronas
-@celery.task(name=CELERY_TASK_NAME)
-def send_async_task(args):
-    registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ el siguiente mensaje [{str(args)}]")
-
+# Funcion para envio de mensaje via pubsub
+def publish_message(args):
+    # Creamos el ciente publihser
+    publisher = pubsub_v1.PublisherClient()
+    args = json.dumps(args).encode('utf-8')
+    messege_published = publisher.publish(PATH_TOPIC, args)
+    registry_log("INFO", f"==> Se publico el mensaje exitosamente, [id = {messege_published.result()}]")
+    
 # Funcion que permite conectarnos a google storage
 def connect_storage():
     # Nos Autenticamos con el service account private key
-    return storage.Client.from_service_account_json(PATH_PRIVATE_KEY)
+    return storage.Client.from_service_account_json(PATH_BUCKET_KEY)
 
 # Funcion que permite subir un archivo al bucket
 def upload_file(file, userFilesPath, fileNameSanitized):

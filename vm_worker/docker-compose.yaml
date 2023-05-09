@@ -1,40 +1,28 @@
 version: "3.2"
 services:
-  rabbitmq_broker:
-    image: "rabbitmq:3.9.13-management"
-    container_name: rabbitmq_broker
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=ConverterUser
-      - RABBITMQ_DEFAULT_PASS=ConverterPass
-    networks:
-      - convert_network
-
-  celery_worker:
-    image: celery_worker:latest
+  worker:
+    image: worker:latest
     privileged: true
     environment:
       - C_FORCE_ROOT=true
       - SEPARATOR_SO=/
-      - DB_HOST=34.125.94.171
+      - DB_HOST=34.27.130.169
       - DB_USER=postgres
       - DB_PASS=dbpass
       - DB_NAME=postgres
-      - PATH_PRIVATE_KEY=dauntless-bay-384421-56876ce150d4.json
+      - BUCKET_GOOGLE=bucket-converter-web-app
+      - PATH_BUCKET_KEY=misw4204-202312-swnube-bucket.json
+      - PATH_PUBSUB_KEY=misw4204-202312-swnube-pub-sub.json
+      - PATH_SUBSCRIBER=projects/misw4204-202312-swnube/subscriptions/tasks-topic-sub
     build: .
     working_dir: /backend/
     volumes:
       - .:/backend/
-    command: celery -A worker.celery worker --pool=solo -l info
-    container_name: celery_worker
+    command: sh run_commands.sh
+    container_name: worker
     restart: always
     networks:
       - convert_network
-    depends_on:
-      - rabbitmq_broker
 
 networks:
   convert_network:
