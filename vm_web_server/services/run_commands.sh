@@ -1,2 +1,2 @@
 #!/bin/sh
-gunicorn --bind 0.0.0.0:5000 manager:app
+gunicorn --bind 0.0.0.0:8080 manager:app
