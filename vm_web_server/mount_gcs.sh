@@ -2,7 +2,7 @@
 # Validamos si existe el directorio gcs_shared 
 if [ -d "/home/gcs_shared" ] 
 then
-    echo "Directory /path/to/dir exists." 
+    umount /home/gcs_shared
 else
     mkdir /home/gcs_shared
     chmod 777 /home/gcs_shared
