@@ -20,7 +20,7 @@ LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
 BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-web-app")
-HOME_PATH = os.getenv("HOME_PATH", default="/mnt/gcs_shared")
+HOME_PATH = os.getenv("HOME_PATH", default="/home/gcs_shared")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
 
