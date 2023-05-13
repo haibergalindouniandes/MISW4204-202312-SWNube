@@ -31,15 +31,19 @@ def callback(message):
         registry_log(
             "INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
         registry_log("INFO", f"==> Tarea [{message.data}]")            
-
         jsonMessage = json.loads(message.data)
+        # Validacion si existe el directory del usuario sino lo creamos
+        USER_FILES_PATH = f"{FILES_PATH}{jsonMessage['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
+        if not os.path.exists(USER_FILES_PATH):
+            os.makedirs(USER_FILES_PATH)
+            registry_log("INFO", f"==> Se crea directorio [{USER_FILES_PATH}]")
+        
         # Validamos la tarea
         db = connect_db()
         task = get_task_by_id(db, jsonMessage['id'])
         if task == None:
             raise Exception(f"==> La tarea [{jsonMessage['id']}] fue eliminada")
-
-        USER_FILES_PATH = f"{FILES_PATH}{jsonMessage['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
+        
         # Convertimos archivo y lo subimos al servidor
         fileCompressed = compress_file_and_upload(jsonMessage["file_origin_path"], USER_FILES_PATH,
                               jsonMessage["file_name"], jsonMessage["file_new_format"], jsonMessage["file_format"])
