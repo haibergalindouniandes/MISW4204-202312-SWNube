@@ -19,13 +19,9 @@ ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
-BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-web-app")
 HOME_PATH = os.getenv("HOME_PATH", default="/home/gcs_shared")
-ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
-
-
-PATH_BUCKET_KEY = os.getenv("PATH_BUCKET_KEY", default="misw4204-202312-swnube-bucket.json")
+ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 PATH_PUBSUB_KEY = os.getenv("PATH_PUBSUB_KEY", default="misw4204-202312-swnube-pub-sub.json")
 PATH_TOPIC = os.getenv("PATH_TOPIC", default="projects/misw4204-202312-swnube/topics/tasks-topic")
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = PATH_PUBSUB_KEY

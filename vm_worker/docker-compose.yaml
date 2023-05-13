@@ -10,8 +10,6 @@ services:
       - DB_USER=postgres
       - DB_PASS=dbpass
       - DB_NAME=postgres
-      - BUCKET_GOOGLE=bucket-converter-web-app
-      - PATH_BUCKET_KEY=misw4204-202312-swnube-bucket.json
       - PATH_PUBSUB_KEY=misw4204-202312-swnube-pub-sub.json
       - PATH_SUBSCRIBER=projects/misw4204-202312-swnube/subscriptions/tasks-topic-sub
     build: .
