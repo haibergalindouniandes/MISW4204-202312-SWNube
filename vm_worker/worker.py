@@ -3,12 +3,11 @@
 import json
 import os
 import tarfile
-import tempfile
 import psycopg2
 import py7zr
 from zipfile import ZIP_DEFLATED, ZipFile
 from datetime import datetime
-from google.cloud import storage, pubsub_v1
+from google.cloud import pubsub_v1
 
 # Constantes
 DB_USER = os.getenv("DB_USER", default="postgres")
