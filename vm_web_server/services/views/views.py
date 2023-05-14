@@ -1,37 +1,30 @@
 import hashlib
+import json
 import os
 import random
 import string
 import socket
 import traceback
-import tempfile
 from datetime import datetime
-from celery import Celery
 from flask import request, send_file
 from models import db, User, UserSchema, Task, TaskSchema
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
-from google.cloud import storage
+from google.cloud import pubsub_v1
+
 
 # Constantes
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
-RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
-RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
-RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
-RABBIT_PORT = os.getenv("RABBIT_PORT", default=15672)
-CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
-BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
-BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-app")
+HOME_PATH = os.getenv("HOME_PATH", default="/home/gcs_shared")
+FILES_PATH = f"{HOME_PATH}{SEPARATOR_SO}files{SEPARATOR_SO}"
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
-FILES_PATH = f"files{SEPARATOR_SO}"
-PATH_PRIVATE_KEY = os.getenv("PATH_PRIVATE_KEY", default="dauntless-bay-384421-56876ce150d4.json")
-
-# Configuramos Celery
-celery = Celery(CELERY_TASK_NAME, broker=BROKER_URL)
+PATH_PUBSUB_KEY = os.getenv("PATH_PUBSUB_KEY", default="misw4204-202312-swnube-pub-sub.json")
+PATH_TOPIC = os.getenv("PATH_TOPIC", default="projects/misw4204-202312-swnube/topics/tasks-topic")
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = PATH_PUBSUB_KEY
 # Definimos los esquemas
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -132,15 +125,23 @@ class ConvertTaskFileResource(Resource):
             registry_log("INFO", f"==> Nombre sanitizado del archivo recibido [{fileNameSanitized}]")
             idUser = get_jwt_identity()
             
-            # Generamos el path del archivo
-            userFilesPath = f"{FILES_PATH}{idUser}{SEPARATOR_SO}{ORIGIN_PATH_FILES}{SEPARATOR_SO}"
+            # Validacion si existe el directory de archivos sino lo creamos
+            if not os.path.exists(FILES_PATH):
+                os.makedirs(FILES_PATH)
+                registry_log("INFO", f"==> Se crea directorio [{FILES_PATH}]")
+            
+            # Validacion si existe el directory del usuario sino lo creamos
+            USER_FILES_PATH = f"{FILES_PATH}{idUser}{SEPARATOR_SO}{ORIGIN_PATH_FILES}{SEPARATOR_SO}"
+            if not os.path.exists(USER_FILES_PATH):
+                os.makedirs(USER_FILES_PATH)
+                registry_log("INFO", f"==> Se crea directorio [{USER_FILES_PATH}]")
             
             # Generamos el prefijo para el archivo
             prefix = f"{random_letters(MAX_LETTERS)}_"
             fileNameSanitized = f"{prefix}{fileNameSanitized}"
             
             # Subimos el archivo 
-            upload_file(file, userFilesPath, fileNameSanitized)
+            file.save(f"{USER_FILES_PATH}{fileNameSanitized}")  
             
             # Obtenemos información del archivo
             fileName = fileNameSanitized.rsplit('.', 1)[0]
@@ -148,13 +149,13 @@ class ConvertTaskFileResource(Resource):
             fileFormat = dataFile[-1]
             
             # Guardamos la informacion del archivo en DB
-            newTask = registry_task_to_db(fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, file.mimetype, idUser)
+            newTask = registry_task_to_db(fileName, fileFormat, fileNewFormat, USER_FILES_PATH, fileNameSanitized, file.mimetype, idUser)
             
             registry_log("INFO", f"==> Se registra tarea en BD [{task_schema.dump(newTask)}]")
             # Enviamos de tarea asincrona
             args = (task_schema.dump(newTask))
-            registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ [{BROKER_URL}] el siguiente mensaje [{str(args)}]")
-            send_async_task.delay(args)
+            registry_log("INFO", f"==> Se envia al Topic [{PATH_TOPIC}] el siguiente mensaje [{str(args)}]")
+            publish_message(args)
             # Retornamos respuesta exitosa
             registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
@@ -266,49 +267,29 @@ class FileDownloadResource(Resource):
                 return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
             
             pathFileToDownload = None
-            extensionFileToDownload = None
             # Descargamos el archivo
             if fileType == 'original':
                 pathFileToDownload = task.file_origin_path
-                extensionFileToDownload = task.file_format
             else:
                 pathFileToDownload = task.file_convert_path
-                extensionFileToDownload = task.file_new_format
             
-            # Descargamos el archivo temporalmente
-            # Nos conectamos al bucket
-            client = connect_storage()
-            bucket = storage.Bucket(client, BUCKET_GOOGLE)
-            blob = bucket.blob(pathFileToDownload)
-            # Descargamos temporalmente el archivo
-            with tempfile.NamedTemporaryFile() as temp:
-                blob.download_to_filename(temp.name)  
-                registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
-                registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
-                return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
+            registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
+            registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
+            # return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
+            return send_file(pathFileToDownload, as_attachment=True)
         except Exception as e:
             traceback.print_stack()
             registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
             registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
             return {"msg": str(e)}, 500
 
-# Funcion para envio de tareas asincronas
-@celery.task(name=CELERY_TASK_NAME)
-def send_async_task(args):
-    registry_log("INFO", f"==> Se envia tarea al Broker RabbitMQ el siguiente mensaje [{str(args)}]")
-
-# Funcion que permite conectarnos a google storage
-def connect_storage():
-    # Nos Autenticamos con el service account private key
-    return storage.Client.from_service_account_json(PATH_PRIVATE_KEY)
-
-# Funcion que permite subir un archivo al bucket
-def upload_file(file, userFilesPath, fileNameSanitized):
-    client = connect_storage()
-    # Nos conectamos al bucket
-    bucket = storage.Bucket(client, BUCKET_GOOGLE)
-    blob = bucket.blob(f"{userFilesPath}{fileNameSanitized}")
-    blob.upload_from_string(file.read(), content_type=file.content_type)
+# Funcion para envio de mensaje via pubsub
+def publish_message(args):
+    # Creamos el ciente publihser
+    publisher = pubsub_v1.PublisherClient()
+    args = json.dumps(args).encode('utf-8')
+    messege_published = publisher.publish(PATH_TOPIC, args)
+    registry_log("INFO", f"==> Se publico el mensaje exitosamente, [id = {messege_published.result()}]")
     
 # Funcion que permite registrar tarea en BD
 def registry_task_to_db(fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, fileMimetype, idUser):
