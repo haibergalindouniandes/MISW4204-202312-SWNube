@@ -11,7 +11,7 @@ from flask_jwt_extended import JWTManager
 DB_DRIVER = os.getenv("DB_DRIVER", default="postgresql")
 DB_USER = os.getenv("DB_USER", default="postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD", default="dbpass")
-DB_HOST = os.getenv("DB_HOST", default="postgres")
+DB_HOST = os.getenv("DB_HOST", default="34.27.130.169")
 DB_NAME = os.getenv("DB_NAME", default="postgres")
 DB_PORT = os.getenv("DB_PORT", default=5432)
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", default="JwBGj2B4XFAKhYmn8Pgk0vH2w7UvgYfXAJ32e5rs8vI=")
