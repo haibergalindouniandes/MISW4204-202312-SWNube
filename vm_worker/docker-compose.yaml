@@ -3,9 +3,9 @@ services:
   worker:
     image: worker:latest
     environment:
-      - PORT=8080
+      - PORT=80
       - SEPARATOR_SO=/
-      - DB_HOST=192.168.0.10
+      - DB_HOST=34.66.39.220
       - DB_USER=postgres
       - DB_PASS=dbpass
       - DB_NAME=postgres
@@ -13,7 +13,7 @@ services:
     build: .
     working_dir: /backend/
     ports:
-      - 8080:8080
+      - 80:80
     volumes:
       - .:/backend/
     container_name: worker

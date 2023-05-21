@@ -8,6 +8,11 @@ ENV PYTHONUNBUFFERED True
 # Update and upgrade system
 RUN apt-get upgrade
 RUN apt-get update
+RUN apt-get install python3-dev -y
+RUN apt-get install gcc -y
+RUN apt-get install libc-dev -y
+RUN apt-get install libffi-dev -y
+RUN apt-get install libpq-dev -y
 
 # Copy local code to the container image.
 ENV APP_HOME /app

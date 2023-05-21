@@ -10,3 +10,20 @@
 [INFO]-[2023-05-21 13:27:53.695764]-[==> Finaliza conversion en 7ZIP]
 [INFO]-[2023-05-21 13:27:54.879118]-[==> Se realiza la subid de archivos [files/1/compressed_files/whJcRW_ArchivoPrueba1.7z]]
 [INFO]-[2023-05-21 13:27:54.894511]-[==> Se actualiza la tarea en BD [2]]
+[INFO]-[2023-05-21 21:12:15.183118]-[<=================== Inicio del procesamiento de la tarea ===================>]
+[INFO]-[2023-05-21 21:12:15.187272]-[==> Tarea [{'status': 'uploaded', 'id_user': 1, 'id': 1, 'updated': None, 'file_origin_path': 'files/1/origin_files/VieChP_ArchivoPrueba1.pdf', 'file_name': 'VieChP_ArchivoPrueba1', 'timestamp': '2023-05-21T21:09:29.982393', 'file_format': '.pdf', 'mimetype': 'application/pdf', 'file_new_format': '.7z', 'file_convert_path': None}]]
+[ERROR]-[2023-05-21 21:12:18.308834]-[==> could not connect to server: No route to host
+	Is the server running on host "192.168.0.10" and accepting
+	TCP/IP connections on port 5432?
+]
+[INFO]-[2023-05-21 21:14:12.484135]-[<=================== Inicio del procesamiento de la tarea ===================>]
+[INFO]-[2023-05-21 21:14:12.486144]-[==> Tarea [{'status': 'uploaded', 'id_user': 1, 'id': 1, 'updated': None, 'file_origin_path': 'files/1/origin_files/VieChP_ArchivoPrueba1.pdf', 'file_name': 'VieChP_ArchivoPrueba1', 'timestamp': '2023-05-21T21:09:29.982393', 'file_format': '.pdf', 'mimetype': 'application/pdf', 'file_new_format': '.7z', 'file_convert_path': None}]]
+[INFO]-[2023-05-21 21:14:13.636675]-[==> Ruta del archivo [files/1/compressed_files]]
+[INFO]-[2023-05-21 21:14:13.645945]-[==> Se crea temporalmente el directorio [tmp/tmpe8l9lioa]]
+[INFO]-[2023-05-21 21:14:15.351080]-[==> Se realiza la descarga de archivos [tmp/tmpe8l9lioa/VieChP_ArchivoPrueba1.pdf]]
+[INFO]-[2023-05-21 21:14:15.353368]-[==> Inicia conversion en 7ZIP]
+[INFO]-[2023-05-21 21:14:15.355244]-[==> Archivo origen [tmp/tmpe8l9lioa/VieChP_ArchivoPrueba1.pdf]]
+[INFO]-[2023-05-21 21:14:15.357232]-[==> Archivo a crear [tmp/tmpe8l9lioa/VieChP_ArchivoPrueba1.7z]]
+[INFO]-[2023-05-21 21:14:15.871012]-[==> Finaliza conversion en 7ZIP]
+[INFO]-[2023-05-21 21:14:17.013872]-[==> Se realiza la subida de archivos [files/1/compressed_files/VieChP_ArchivoPrueba1.7z]]
+[INFO]-[2023-05-21 21:14:17.207156]-[==> Se actualiza la tarea en BD [1]]
