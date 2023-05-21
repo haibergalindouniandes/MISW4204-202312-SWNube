@@ -264,4 +264,4 @@ api.add_resource(ConvertTaskFileResource, "/api/tasks/worker")
 # Inicializamos la aplicacion con Flask
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(
-        os.getenv("PORT", default="80")))
+        os.getenv("PORT", default="8080")))
