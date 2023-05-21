@@ -9,16 +9,15 @@ RUN apk update && apk upgrade && \
     libffi-dev \
     libpq-dev \
     nfs-utils
-# Make dir app
-RUN mkdir /backend
-WORKDIR /backend
-
-COPY requirements.txt /backend/
-RUN pip install -r requirements.txt
-# Copy the source from the current directory to the Working Directory inside the container
-COPY . .
-
-# RUN mkdir -p /mnt/nfs_clientshare
-# RUN mount 192.168.0.16:/mnt/nfs_share /mnt/nfs_clientshare
-# Expose port 8080 to the outside world
-EXPOSE 5000
+# Copy local code to the container image.
+ENV APP_HOME /app
+WORKDIR $APP_HOME
+COPY . ./
+# Install production dependencies.
+RUN pip install --no-cache-dir -r requirements.txt
+# Run the web service on container startup. Here we use the gunicorn
+# webserver, with one worker process and 8 threads.
+# For environments with multiple CPU cores, increase the number of workers
+# to be equal to the cores available.
+# Timeout is set to 0 to disable the timeouts of the workers to allow Cloud Run to handle instance scaling.
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app

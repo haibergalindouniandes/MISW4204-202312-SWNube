@@ -1,13 +1,17 @@
 
 # Constantes
-import json
 import os
+import socket
 import tarfile
 import tempfile
 import psycopg2
 import py7zr
+from flask import Flask
+from flask import request
+from flask_cors import CORS
+from flask_restful import Api
 from zipfile import ZIP_DEFLATED, ZipFile
-from celery import Celery
+from flask_restful import Resource
 from datetime import datetime
 from google.cloud import storage
 
@@ -17,68 +21,37 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", default="dbpass")
 DB_HOST = os.getenv("DB_HOST", default="postgres")
 DB_NAME = os.getenv("DB_NAME", default="postgres")
 DB_PORT = os.getenv("DB_PORT", default=5432)
-RABBIT_USER = os.getenv("RABBIT_USER", default="ConverterUser")
-RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", default="ConverterPass")
-RABBIT_HOST = os.getenv("RABBIT_HOST", default="rabbitmq_broker")
-RABBIT_PORT = os.getenv("RABBIT_PORT", default=5672)
-RABBIT_VHOST = os.getenv("RABBIT_VHOST", default="vhost_converter")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
 TMP_PATH = os.getenv("TMP_PATH", default="tmp")
-CELERY_TASK_NAME = os.getenv("CELERY_TASK_NAME", default="celery")
-BROKER_URL = f"pyamqp://{RABBIT_USER}:{RABBIT_PASSWORD}@{RABBIT_HOST}//"
 FILES_PATH = f"files{SEPARATOR_SO}"
-COMPRESSED_PATH_FILES = os.getenv("COMPRESSED_PATH_FILES", default="compressed_files")
+COMPRESSED_PATH_FILES = os.getenv(
+    "COMPRESSED_PATH_FILES", default="compressed_files")
 LOG_FILE = os.getenv("LOG_FILE", default="log_worker.txt")
-BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-app")
-PATH_PRIVATE_KEY = os.getenv("PATH_PRIVATE_KEY", default="dauntless-bay-384421-56876ce150d4.json")
+BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-web-app")
+PATH_PRIVATE_KEY = os.getenv(
+    "PATH_PRIVATE_KEY", default="misw4204-202312-swnube-bucket.json")
 
-# Configuramos Celery
-celery = Celery(CELERY_TASK_NAME, broker=BROKER_URL)
+# Configuracion app
+app = Flask(__name__)
+app_context = app.app_context()
+app_context.push()
+cors = CORS(app)
 
-# Funcion para el procesamiento de los archivos
-@celery.task(name=CELERY_TASK_NAME)
-def process_file(args):
-    message = args
-    try:
-        registry_log(
-            "INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
-        registry_log("INFO", f"==> Tarea [{str(args)}]")            
-
-        # Validamos la tarea
-        db = connect_db()
-        task = get_task_by_id(db, message['id'])
-        if task == None:
-            raise Exception(f"==> La tarea [{message['id']}] fue eliminada")
-
-        userFilePathDestination = f"{FILES_PATH}{message['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
-        registry_log("INFO", f"==> Ruta del archivo [{userFilePathDestination}]")   
-        
-        # Creamos directory temporal si no existe
-        create_temp_directory()
-        
-        # Convertimos archivo y lo subimos al servidor
-        fileCompressed = compress_file_and_upload(message["file_origin_path"], userFilePathDestination,
-                              message["file_name"], message["file_new_format"], message["file_format"])
-        
-        # Actualizamos tarea en BD
-        update_task(db, message['id'], fileCompressed)
-        registry_log("INFO", f"==> Se actualiza la tarea en BD [{message['id']}]")
-    except Exception as e:
-        registry_log("ERROR", f"==> {str(e)}")
-    finally:
-        registry_log(
-            "INFO", f"<=================== Fin del procesamiento de la tarea ===================>")
+api = Api(app)
 
 
+# Funciones utilitarias
 # Funcion para comprimir archivos
 def compress_file_and_upload(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
     fileProcessed = None
     temporaryPath = TMP_PATH
     tempDir = tempfile.TemporaryDirectory(dir=temporaryPath)
-    registry_log("INFO", f"==> Se crea temporalmente el directorio [{tempDir.name}]")
+    registry_log(
+        "INFO", f"==> Se crea temporalmente el directorio [{tempDir.name}]")
     # Descargamos el archivo temporalmente
-    fileDownloaded = download_file(fullFilePathOrigin, tempDir, fileName, originExt)
-    
+    fileDownloaded = download_file(
+        fullFilePathOrigin, tempDir, fileName, originExt)
+
     # Comprimimos el archivo
     if fileConverterExt.lower() == '.zip':
         fileProcessed = compress_in_zip(
@@ -92,10 +65,9 @@ def compress_file_and_upload(fullFilePathOrigin, filePathCompressed, fileName, f
     if fileConverterExt.lower() == '.tar.bz2':
         fileProcessed = compress_in_tbz(
             fileDownloaded.name, tempDir.name, fileName, fileConverterExt, originExt)
-    
     # Subimos el archivo comprimido
-    fileUpload = upload_file(fileProcessed, filePathCompressed, f"{fileName}{fileConverterExt}")
-    
+    fileUpload = upload_file(
+        fileProcessed, filePathCompressed, f"{fileName}{fileConverterExt}")
     return fileUpload
 
 # Funcion para comprimir en formato zip
@@ -118,7 +90,8 @@ def compress_in_7zip(fullFilePathOrigin, filePathCompressed, fileName, fileConve
     fileCompressed = f"{filePathCompressed}{SEPARATOR_SO}{fileName}{fileConverterExt}"
     registry_log("INFO", f"==> Archivo a crear [{fileCompressed}]")
     with py7zr.SevenZipFile(fileCompressed, 'w') as file:
-        file.writeall(f"{fullFilePathOrigin}", f"{fileName}{originExt}")
+        file.writeall(f"{fullFilePathOrigin}",
+                        f"{fileName}{originExt}")
     registry_log("INFO", f"==> Finaliza conversion en 7ZIP")
     return fileCompressed
 
@@ -156,8 +129,9 @@ def download_file(fullFilePathOrigin, tempDir, fileName, originExt):
     # Descargamos temporalmente el archivo
     with open(pathFileToDownload, 'wb') as fileDownloaded:
         blob.download_to_filename(pathFileToDownload)
-    
-    registry_log("INFO", f"==> Se realiza la descarga de archivos [{fileDownloaded.name}]")    
+
+    registry_log(
+        "INFO", f"==> Se realiza la descarga de archivos [{fileDownloaded.name}]")
     return fileDownloaded
 
 # Funcion que permite subir un archivo al bucket
@@ -168,10 +142,10 @@ def upload_file(fileCompressed, filePathDestination, fileNameSanitized):
     fullFilePathUpload = f"{filePathDestination}{SEPARATOR_SO}{fileNameSanitized}"
     blob = bucket.blob(fullFilePathUpload)
     blob.upload_from_filename(fileCompressed)
-    registry_log("INFO", f"==> Se realiza la subid de archivos [{fullFilePathUpload}]")
+    registry_log(
+        "INFO", f"==> Se realiza la subida de archivos [{fullFilePathUpload}]")
     return fullFilePathUpload
-    
-    
+
 # Funcion que permite conectarnos a google storage
 def connect_storage():
     # Nos Autenticamos con el service account private key
@@ -199,7 +173,7 @@ def get_task_by_id(db, id):
     except:
         if db is not None:
             db.close()
-     
+
 # Funcion para actualizar tarea
 def update_task(db, id, file_convert_path):
     try:
@@ -209,17 +183,17 @@ def update_task(db, id, file_convert_path):
         db.commit()
         cur.close()
     except Exception as e:
-        raise(str(e))
+        raise (str(e))
     finally:
         if db is not None:
-            db.close()    
+            db.close()
 
 # Funcion para crear el diretorio temporal
 def create_temp_directory():
     isExist = os.path.exists(TMP_PATH)
     if not isExist:
         os.makedirs(TMP_PATH)
-        registry_log("INFO",f"==> Se crea directorio [{TMP_PATH}]")
+        registry_log("INFO", f"==> Se crea directorio [{TMP_PATH}]")
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):
@@ -227,3 +201,67 @@ def registry_log(severity, message):
         file.write(
             f"[{severity}]-[{datetime.now()}]-[{message}]\n")
 
+# Clases
+# Clase que contiene la logica de procesamiento de archivos
+class ConvertTaskFileResource(Resource):
+    # Funcion para el procesamiento de los archivos
+    def post(self):
+        message = request.json
+        try:
+            registry_log(
+                "INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
+            registry_log("INFO", f"==> Tarea [{str(message)}]")
+
+            # Validamos la tarea
+            db = connect_db()
+            task = get_task_by_id(db, message['id'])
+            if task == None:
+                raise Exception(
+                    f"==> La tarea [{message['id']}] fue eliminada")
+
+            userFilePathDestination = f"{FILES_PATH}{message['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
+            registry_log(
+                "INFO", f"==> Ruta del archivo [{userFilePathDestination}]")
+
+            # Creamos directory temporal si no existe
+            create_temp_directory()
+
+            # Convertimos archivo y lo subimos al servidor
+            fileCompressed = compress_file_and_upload(message["file_origin_path"], userFilePathDestination,
+                                                      message["file_name"], message["file_new_format"], message["file_format"])
+
+            # Actualizamos tarea en BD
+            update_task(db, message['id'], fileCompressed)
+            registry_log(
+                "INFO", f"==> Se actualiza la tarea en BD [{message['id']}]")
+            return {"msg": f"Se convirtio tarea [{message['id']}] exitosamente"}
+        except Exception as e:
+            registry_log("ERROR", f"==> {str(e)}")
+            return {"msg": str(e)}, 500
+
+# Clase que retorna el estado del servicio
+class HealthCheckResource(Resource):
+    def get(self):
+        hostIp = socket.gethostbyname(socket.gethostname())
+        hostName = socket.gethostname()
+        timestamp = datetime.now()
+        remoteIp = None
+        if request.remote_addr:
+            remoteIp = request.remote_addr
+        elif request.environ['REMOTE_ADDR']:
+            remoteIp = request.remote_addr
+        else:
+            remoteIp = request.environ.get(
+                'HTTP_X_FORWARDED_FOR', request.remote_addr)
+
+        return {"host_name": hostName, "host_ip": hostIp, "remote_ip": remoteIp, "timestamp": str(timestamp)}
+
+
+# Agregamos los recursos
+api.add_resource(HealthCheckResource, "/")
+api.add_resource(ConvertTaskFileResource, "/api/tasks/worker")
+
+# Inicializamos la aplicacion con Flask
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=int(
+        os.getenv("PORT", default="80")))
