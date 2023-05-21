@@ -243,7 +243,6 @@ class ConvertTaskFileResource(Resource):
             registry_log("ERROR", f"==> {str(e)}")
             return {"msg": str(e)}, 500
 
-# Clases
 # Clase que retorna el estado del servicio
 class HealthCheckResource(Resource):
     def get(self):
