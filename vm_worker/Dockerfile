@@ -1,16 +1,8 @@
-# Start from python:3.8-alpine base image
-FROM python:3.8-alpine
+# Use the official lightweight Python image.
+# https://hub.docker.com/_/python
+FROM python:3.11-slim
 # Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
-# Adding git, bash and openssh to the image
-RUN apk update && apk upgrade && \
-    apk add --no-cache bash git openssh \
-    python3-dev \
-    gcc \
-    libc-dev \
-    libffi-dev \
-    libpq-dev \
-    nfs-utils
 # Copy local code to the container image.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
