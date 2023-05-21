@@ -39,6 +39,12 @@ cors = CORS(app)
 api = Api(app)
 
 # Funciones utilitarias
+# Funcion para resgitrar logs
+def registry_log(severity, message):
+    with open(LOG_FILE, 'a') as file:
+        file.write(
+            f"[{severity}]-[{datetime.now()}]-[{message}]\n")
+        
 # Funcion para comprimir archivos
 def compress_file_and_upload(fullFilePathOrigin, filePathCompressed, fileName, fileConverterExt, originExt):
     fileProcessed = None
@@ -236,13 +242,6 @@ class ConvertTaskFileResource(Resource):
         except Exception as e:
             registry_log("ERROR", f"==> {str(e)}")
             return {"msg": str(e)}, 500
-
-# Funciones utilitarias
-# Funcion para resgitrar logs
-def registry_log(severity, message):
-    with open(LOG_FILE, 'a') as file:
-        file.write(
-            f"[{severity}]-[{datetime.now()}]-[{message}]\n")
 
 # Clases
 # Clase que retorna el estado del servicio
