@@ -258,7 +258,7 @@ class HealthCheckResource(Resource):
 
 
 # Agregamos los recursos
-api.add_resource(HealthCheckResource, "/")
+api.add_resource(HealthCheckResource, "/api")
 api.add_resource(ConvertTaskFileResource, "/api/tasks/worker")
 
 # Inicializamos la aplicacion con Flask
