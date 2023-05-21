@@ -5,6 +5,10 @@ FROM python:3.11-slim
 # Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
 
+# Update and upgrade system
+RUN apt-get upgrade
+RUN apt-get update
+
 # Copy local code to the container image.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
