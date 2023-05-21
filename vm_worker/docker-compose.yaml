@@ -2,9 +2,7 @@ version: "3.2"
 services:
   worker:
     image: worker:latest
-    privileged: true
     environment:
-      - C_FORCE_ROOT=true
       - SEPARATOR_SO=/
       - DB_HOST=192.168.0.10
       - DB_USER=postgres
@@ -13,11 +11,13 @@ services:
       - PATH_PRIVATE_KEY=misw4204-202312-swnube-bucket.json
     build: .
     working_dir: /backend/
+    ports:
+      - 8080:8080
     volumes:
       - .:/backend/
-    command: gunicorn --bind 0.0.0.0:80 app:app
+    command: gunicorn --bind 0.0.0.0:8080 app:app
     container_name: worker
-    restart: always
+    restart: always    
     networks:
       - convert_network
 
