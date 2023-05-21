@@ -1,9 +1,9 @@
 # Start from python:3.8-alpine base image
 FROM python:3.8-alpine
 # Allow statements and log messages to immediately appear in the Knative logs
-ENV PYTHONUNBUFFERED True
+ENV PYTHONUNBUFFERED=True
 # Ignore root user
-ENV PIP_ROOT_USER_ACTION ignore
+ENV PIP_ROOT_USER_ACTION=ignore
 # Adding git, bash and openssh to the image
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh \
@@ -14,7 +14,7 @@ RUN apk update && apk upgrade && \
     libpq-dev \
     nfs-utils
 # Copy local code to the container image.
-ENV APP_HOME /app
+ENV APP_HOME=/app
 WORKDIR $APP_HOME
 COPY . ./
 # Install production dependencies.
