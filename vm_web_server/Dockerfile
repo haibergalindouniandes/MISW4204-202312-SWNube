@@ -9,7 +9,8 @@ RUN apk update && apk upgrade && \
     gcc \
     libc-dev \
     libffi-dev \
-    libpq-dev
+    libpq-dev \
+    nfs-utils
 # Copy local code to the container image.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
