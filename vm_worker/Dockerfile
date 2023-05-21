@@ -2,6 +2,8 @@
 FROM python:3.8-alpine
 # Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
+# Ignore root user
+ENV PIP_ROOT_USER_ACTION ignore
 # Adding git, bash and openssh to the image
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh \
