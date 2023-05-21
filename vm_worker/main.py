@@ -204,66 +204,61 @@ def registry_log(severity, message):
     with open(LOG_FILE, 'a') as file:
         file.write(
             f"[{severity}]-[{datetime.now()}]-[{message}]\n")
+        
+# Recursos
+# Recurso que inicia el procesamiento de los archivos
+@app.route("/api/tasks/worker", methods=['POST'])
+def post_task():
+    message = request.json
+    try:
+        registry_log(
+            "INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
+        registry_log("INFO", f"==> Tarea [{str(message)}]")
 
-# Clases
-# Clase que contiene la logica de procesamiento de archivos
-class ConvertTaskFileResource(Resource):
-    # Funcion para el procesamiento de los archivos
-    def post(self):
-        message = request.json
-        try:
-            registry_log(
-                "INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
-            registry_log("INFO", f"==> Tarea [{str(message)}]")
+        # Validamos la tarea
+        db = connect_db()
+        task = get_task_by_id(db, message['id'])
+        if task == None:
+            raise Exception(
+                f"==> La tarea [{message['id']}] fue eliminada")
 
-            # Validamos la tarea
-            db = connect_db()
-            task = get_task_by_id(db, message['id'])
-            if task == None:
-                raise Exception(
-                    f"==> La tarea [{message['id']}] fue eliminada")
+        userFilePathDestination = f"{FILES_PATH}{message['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
+        registry_log(
+            "INFO", f"==> Ruta del archivo [{userFilePathDestination}]")
 
-            userFilePathDestination = f"{FILES_PATH}{message['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
-            registry_log(
-                "INFO", f"==> Ruta del archivo [{userFilePathDestination}]")
+        # Creamos directory temporal si no existe
+        create_temp_directory()
 
-            # Creamos directory temporal si no existe
-            create_temp_directory()
+        # Convertimos archivo y lo subimos al servidor
+        fileCompressed = compress_file_and_upload(message["file_origin_path"], userFilePathDestination,
+                                                    message["file_name"], message["file_new_format"], message["file_format"])
 
-            # Convertimos archivo y lo subimos al servidor
-            fileCompressed = compress_file_and_upload(message["file_origin_path"], userFilePathDestination,
-                                                      message["file_name"], message["file_new_format"], message["file_format"])
+        # Actualizamos tarea en BD
+        update_task(db, message['id'], fileCompressed)
+        registry_log(
+            "INFO", f"==> Se actualiza la tarea en BD [{message['id']}]")
+        return {"msg": f"Se convirtio tarea [{message['id']}] exitosamente"}
+    except Exception as e:
+        registry_log("ERROR", f"==> {str(e)}")
+        return {"msg": str(e)}, 500
 
-            # Actualizamos tarea en BD
-            update_task(db, message['id'], fileCompressed)
-            registry_log(
-                "INFO", f"==> Se actualiza la tarea en BD [{message['id']}]")
-            return {"msg": f"Se convirtio tarea [{message['id']}] exitosamente"}
-        except Exception as e:
-            registry_log("ERROR", f"==> {str(e)}")
-            return {"msg": str(e)}, 500
+# Recurso que retorna el estado del sistema
+@app.route("/")
+def get_health():
+    hostIp = socket.gethostbyname(socket.gethostname())
+    hostName = socket.gethostname()
+    timestamp = datetime.now()
+    remoteIp = None
+    if request.remote_addr:
+        remoteIp = request.remote_addr
+    elif request.environ['REMOTE_ADDR']:
+        remoteIp = request.remote_addr
+    else:
+        remoteIp = request.environ.get(
+            'HTTP_X_FORWARDED_FOR', request.remote_addr)
 
-# Clase que retorna el estado del servicio
-class HealthCheckResource(Resource):
-    def get(self):
-        hostIp = socket.gethostbyname(socket.gethostname())
-        hostName = socket.gethostname()
-        timestamp = datetime.now()
-        remoteIp = None
-        if request.remote_addr:
-            remoteIp = request.remote_addr
-        elif request.environ['REMOTE_ADDR']:
-            remoteIp = request.remote_addr
-        else:
-            remoteIp = request.environ.get(
-                'HTTP_X_FORWARDED_FOR', request.remote_addr)
+    return {"host_name": hostName, "host_ip": hostIp, "remote_ip": remoteIp, "timestamp": str(timestamp)}
 
-        return {"host_name": hostName, "host_ip": hostIp, "remote_ip": remoteIp, "timestamp": str(timestamp)}
-
-
-# Agregamos los recursos
-api.add_resource(HealthCheckResource, "/")
-api.add_resource(ConvertTaskFileResource, "/api/tasks/worker")
 
 # Inicializamos la aplicacion con Flask
 if __name__ == "__main__":
