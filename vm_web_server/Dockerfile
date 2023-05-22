@@ -1,6 +1,5 @@
-# Use the official lightweight Python image.
-# https://hub.docker.com/_/python
-FROM python:3.11-slim
+# Start from python:3.8-alpine base image
+FROM python:3.8-alpine
 
 # Configuration environment vars
 ENV PYTHONUNBUFFERED True
@@ -16,13 +15,14 @@ ENV PATH_PUBSUB_KEY misw4204-202312-swnube-pub-sub.json
 ENV PATH_TOPIC projects/misw4204-202312-swnube/topics/tasks-topic
 
 # Update, upgrade system and install packages
-RUN apt-get upgrade
-RUN apt-get update
-RUN apt-get install python3-dev -y
-RUN apt-get install gcc -y
-RUN apt-get install libc-dev -y
-RUN apt-get install libffi-dev -y
-RUN apt-get install libpq-dev -y
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh \
+    python3-dev \
+    gcc \
+    libc-dev \
+    libffi-dev \
+    libpq-dev \
+    nfs-utils
 
 # Copy local code to the container image.
 ENV APP_HOME /app
