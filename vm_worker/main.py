@@ -250,27 +250,6 @@ def post_task():
         registry_log("ERROR", f"==> {str(e)}")
         return {"msg": str(e)}, 500
 
-# Recurso que inicia el procesamiento de los archivos
-@app.route("/api/tasks/test", methods=['POST'])
-def post_test():
-    try:
-        message = request.json
-        jsonResponse = json.dumps(message)
-        # Validamos la tarea
-        db = connect_db()
-        cur = db.cursor()
-        stmt = f"INSERT INTO test (message) VALUES('{jsonResponse}')"
-        cur.execute(stmt)
-        db.commit()
-        cur.close()
-        db.close()
-        return {"msg": jsonResponse}
-    except Exception as e:
-        return {"msg": str(e)}
-            
-   
-    
-
 # Recurso que retorna el estado del sistema
 @app.route("/")
 def get_health():
