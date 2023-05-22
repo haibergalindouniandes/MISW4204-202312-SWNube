@@ -11,7 +11,7 @@ from models import db, User, UserSchema, Task, TaskSchema
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
-from google.cloud import pubsub_v1
+from google.cloud import pubsub_v1, storage
 
 
 # Constantes
@@ -141,7 +141,8 @@ class ConvertTaskFileResource(Resource):
             fileNameSanitized = f"{prefix}{fileNameSanitized}"
             
             # Subimos el archivo 
-            file.save(f"{USER_FILES_PATH}{fileNameSanitized}")  
+            #file.save(f"{USER_FILES_PATH}{fileNameSanitized}")            
+            upload_file(file, userFilesPath, fileNameSanitized)
             
             # Obtenemos información del archivo
             fileName = fileNameSanitized.rsplit('.', 1)[0]
@@ -325,5 +326,12 @@ def formatHomologation(format):
         formatHomologated = '.tar.bz2'
     return formatHomologated
 
+
+def upload_file(file, userFilesPath, fileNameSanitized):
+    client = connect_storage()
+    # Nos conectamos al bucket
+    bucket = storage.Bucket(client, BUCKET_GOOGLE)
+    blob = bucket.blob(f"{userFilesPath}{fileNameSanitized}")
+    blob.upload_from_string(file.read(), content_type=file.content_type)
 
 

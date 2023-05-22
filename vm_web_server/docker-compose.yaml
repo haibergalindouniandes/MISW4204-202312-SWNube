@@ -6,7 +6,7 @@ services:
     restart: always
     privileged: true
     environment:
-      - DB_HOST=34.27.130.169
+      - DB_HOST=34.66.39.220
       - DB_NAME=postgres
       - DB_USER=postgres
       - DB_PASSWORD=dbpass
