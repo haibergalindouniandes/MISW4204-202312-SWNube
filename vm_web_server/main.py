@@ -112,33 +112,32 @@ def get_health():
     return {"host_name": hostName, "host_ip": hostIp, "remote_ip": remoteIp, "timestamp": str(timestamp)}
 
 # Recurso que permite realizar el loggueo
-@app.route("/api/auth/login", methods=['POST', 'GET'])
+@app.route("/api/auth/login", methods=['POST'])
 def login():
-    if request.method == 'POST':
-        try:
-            password_encriptada = hashlib.md5(
-                request.json["password"].encode("utf-8")
-            ).hexdigest()
-            usuario = User.query.filter(
-                User.username == request.json["username"],
-                User.password == password_encriptada,
-            ).first()
+    try:
+        password_encriptada = hashlib.md5(
+            request.json["password"].encode("utf-8")
+        ).hexdigest()
+        usuario = User.query.filter(
+            User.username == request.json["username"],
+            User.password == password_encriptada,
+        ).first()
 
-            if usuario is None:
-                return {"msg": "Usuario o contraseña invalida"}, 409
+        if usuario is None:
+            return {"msg": "Usuario o contraseña invalida"}, 409
 
-            token_de_acceso = create_access_token(identity=usuario.id)
-            return {
-                "msg": "Inicio de sesión exitoso",
-                "username": usuario.username,
-                "token": token_de_acceso,
-            }
-        except Exception as e:
-            traceback.print_stack()
-            return {"msg": str(e)}, 500
+        token_de_acceso = create_access_token(identity=usuario.id)
+        return {
+            "msg": "Inicio de sesión exitoso",
+            "username": usuario.username,
+            "token": token_de_acceso,
+        }
+    except Exception as e:
+        traceback.print_stack()
+        return {"msg": str(e)}, 500
 
 # Recurso que permite registrar un usuario nuevo
-@app.route("/api/auth/signup", methods=['POST', 'GET'])
+@app.route("/api/auth/signup", methods=['POST'])
 def signup():
     if request.method == 'POST':        
         usuario = User.query.filter(User.username == request.json["username"]).first()
