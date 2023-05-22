@@ -137,11 +137,11 @@ def login():
                 return {"msg": "Usuario o contraseña invalida"}, 409
 
             token_de_acceso = create_access_token(identity=usuario.id)
-            return {
+            return jsonify({
                 "msg": "Inicio de sesión exitoso",
                 "username": usuario.username,
                 "token": token_de_acceso,
-            }
+            })
         except Exception as e:
             traceback.print_stack()
             return {"msg": str(e)}, 500
