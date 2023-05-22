@@ -94,6 +94,11 @@ users_schema = UserSchema(many=True)
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
 
+# Ejecutamos la configuracion de sqlachemy
+db.init_app(app)
+db.create_all()
+api = Api(app)
+
 # Recursos
 # Recurso que retorna el estado del sistema
 @app.route("/", methods=['GET', 'POST', 'DELETE'])
@@ -395,11 +400,6 @@ def formatHomologation(format):
         formatHomologated = '.tar.bz2'
     return formatHomologated
 
-
-# Ejecutamos la configuracion de sqlachemy
-db.init_app(app)
-db.create_all()
-api = Api(app)
 
 # Inicializamos la aplicacion con Flask
 if __name__ == "__main__":
