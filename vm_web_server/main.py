@@ -29,7 +29,6 @@ DB_NAME = os.getenv("DB_NAME", default="postgres")
 DB_PORT = os.getenv("DB_PORT", default=5432)
 JWT_SECRET_KEY = os.getenv(
     "JWT_SECRET_KEY", default="JwBGj2B4XFAKhYmn8Pgk0vH2w7UvgYfXAJ32e5rs8vI=")
-
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
 LOG_FILE = os.getenv("LOG_FILE", default="log_services.txt")
 SEPARATOR_SO = os.getenv("SEPARATOR_SO", default="/")
@@ -37,9 +36,12 @@ MAX_LETTERS = os.getenv("MAX_LETTERS", default=6)
 BUCKET_GOOGLE = os.getenv("BUCKET_GOOGLE", default="bucket-converter-web-app")
 ORIGIN_PATH_FILES = os.getenv("ORIGIN_PATH_FILES", default="origin_files")
 FILES_PATH = f"files{SEPARATOR_SO}"
-PATH_BUCKET_KEY = os.getenv("PATH_BUCKET_KEY", default="misw4204-202312-swnube-bucket.json")
-PATH_PUBSUB_KEY = os.getenv("PATH_PUBSUB_KEY", default="misw4204-202312-swnube-pub-sub.json")
-PATH_TOPIC = os.getenv("PATH_TOPIC", default="projects/misw4204-202312-swnube/topics/tasks-topic")
+PATH_BUCKET_KEY = os.getenv(
+    "PATH_BUCKET_KEY", default="misw4204-202312-swnube-bucket.json")
+PATH_PUBSUB_KEY = os.getenv(
+    "PATH_PUBSUB_KEY", default="misw4204-202312-swnube-pub-sub.json")
+PATH_TOPIC = os.getenv(
+    "PATH_TOPIC", default="projects/misw4204-202312-swnube/topics/tasks-topic")
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = PATH_PUBSUB_KEY
 
 # Configuracion app
@@ -82,12 +84,14 @@ class Task(db.Model):
     timestamp = db.Column(DateTime, default=datetime.utcnow)
     mimetype = db.Column(db.String(300), nullable=True)
     id_user = db.Column(db.Integer, nullable=True)
-    
+
+
 class TaskSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Task
         id = fields.String()
-        
+
+
 # Definimos los esquemas
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -101,7 +105,7 @@ api = Api(app)
 
 # Recursos
 # Recurso que retorna el estado del sistema
-@app.route("/", methods=['GET', 'POST', 'DELETE'])
+@app.route("/", methods=['GET'])
 def get_health():
     hostIp = socket.gethostbyname(socket.gethostname())
     hostName = socket.gethostname()
@@ -117,7 +121,7 @@ def get_health():
     return {"host_name": hostName, "host_ip": hostIp, "remote_ip": remoteIp, "timestamp": str(timestamp)}
 
 # Recurso que permite realizar el loggueo
-@app.route("/api/auth/login", methods=['POST'])
+@app.route("/api/auth/login", methods=['GET', 'POST'])
 def login():
     try:
         password_encriptada = hashlib.md5(
@@ -142,12 +146,14 @@ def login():
         return {"msg": str(e)}, 500
 
 # Recurso que permite registrar un usuario nuevo
-@app.route("/api/auth/signup", methods=['POST'])
+@app.route("/api/auth/signup", methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':        
-        usuario = User.query.filter(User.username == request.json["username"]).first()
+    if request.method == 'POST':
+        usuario = User.query.filter(
+            User.username == request.json["username"]).first()
         if usuario is None:
-            email = User.query.filter(User.email == request.json["email"]).first()
+            email = User.query.filter(
+                User.email == request.json["email"]).first()
             if email is None:
                 if request.json["password1"] == request.json["password2"]:
                     password_encriptada = hashlib.md5(
@@ -170,10 +176,34 @@ def signup():
 
 
 # Recursos que permite gestionar las tareas de conversion
-@app.route("/api/tasks", methods=['POST', 'GET'])
+@app.route("/api/tasks", methods=['GET', 'POST'])
 @jwt_required()
 def tasks():
     if request.method == 'POST':
+        try:
+            registry_log(
+                "INFO", f"<=================== Inicio de la consulta de todas las tareas ===================>")
+            queryParams = request.args
+            tasks = tasks_schema.dump(Task.query.all())
+            registry_log(
+                "INFO", f"==> Tareas retornadas [{str(tasks)}]")
+            if queryParams.get('order') != None:
+                if int(queryParams.get('order')) == 1:
+                    tasks = sorted(tasks, key=lambda d: d["id"], reverse=True)
+                else:
+                    tasks = sorted(tasks, key=lambda d: d["id"], reverse=False)
+            if 'max' in queryParams:
+                tasks = tasks[: int(queryParams.get("max"))]
+            registry_log(
+                "INFO", f"==> Tareas filtradas [{str(tasks)}]")
+            registry_log(
+                "INFO", f"<=================== Fin de la consulta de todas las tareas ===================>")
+            return jsonify(tasks)
+        except Exception as e:
+            registry_log(
+                "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
+            return {"msg": str(e)}, 500
+    elif request.method == 'GET':
         try:
             registry_log(
                 "INFO", f"<=================== Inicio de la creación de la tarea ===================>")
@@ -230,64 +260,47 @@ def tasks():
                 "INFO", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
         except Exception as e:
-            traceback.print_stack()
             registry_log("ERROR", f"==> {str(e)}")
             registry_log(
                 "ERROR", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": str(e)}, 500
-    elif request.method == 'GET':
-        try:
-            registry_log(
-                "INFO", f"<=================== Inicio de la consulta de todas las tareas ===================>")
-            queryParams = request.args
-            tasks = tasks_schema.dump(Task.query.all())
-            registry_log(
-                    "INFO", f"==> Tareas retornadas [{str(tasks)}]")
-            if queryParams.get('order') != None:
-                if int(queryParams.get('order')) == 1:
-                    tasks = sorted(tasks, key=lambda d: d["id"], reverse=True)
-                else:
-                    tasks = sorted(tasks, key=lambda d: d["id"], reverse=False)
-            if 'max' in queryParams:
-                tasks = tasks[: int(queryParams.get("max"))]
-            registry_log(
-                "INFO", f"==> Tareas filtradas [{str(tasks)}]")
-            registry_log(
-            "INFO", f"<=================== Fin de la consulta de todas las tareas ===================>")
-            return jsonify(tasks)
-        except Exception as e:
-            registry_log(
-                "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
-            return {"msg": str(e)}, 500
+
     else:
         return {"msg": "Method is no allowed"}, 500
 
 # Recursos que permite gestionar las tareas de conversion
 @app.route("/api/tasks/<id_task>", methods=['GET', 'DELETE'])
-@jwt_required()    
+@jwt_required()
 def taskById(id_task):
     if request.method == 'DELETE':
         try:
-            registry_log("INFO", f"<=================== Inicio de la eliminación de tareas ===================>")
+            registry_log(
+                "INFO", f"<=================== Inicio de la eliminación de tareas ===================>")
             # Se consulta la tarea con base al id
             registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
             task = Task.query.filter(Task.id == id_task).first()
             # Se valida si no existe la tarea
             registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
             if task is None:
-                registry_log("ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
-                registry_log("ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+                registry_log(
+                    "ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
+                registry_log(
+                    "ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
                 return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
-            # Se elimina la tarea             
+            # Se elimina la tarea
             db.session.delete(task)
             db.session.commit()
-            registry_log("INFO", f"==> La tarea con el id [{id_task}] fue eliminada correctamente")
-            registry_log("INFO", f"<=================== Fin de la eliminación de tareas ===================>")
+            registry_log(
+                "INFO", f"==> La tarea con el id [{id_task}] fue eliminada correctamente")
+            registry_log(
+                "INFO", f"<=================== Fin de la eliminación de tareas ===================>")
             return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
         except Exception as e:
             traceback.print_stack()
-            registry_log("ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
-            registry_log("ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+            registry_log(
+                "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
+            registry_log(
+                "ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
             return {"msg": str(e)}, 500
     else:
         return jsonify(task_schema.dump(Task.query.get_or_404(id_task)))
@@ -296,18 +309,22 @@ def taskById(id_task):
 @app.route("/api/files/<id_task>", methods=['GET'])
 def downloadFiles(id_task):
     try:
-        registry_log("INFO", f"<=================== Inicio de la descarga de archivos ===================>")
+        registry_log(
+            "INFO", f"<=================== Inicio de la descarga de archivos ===================>")
         # Se valida si viene fileType
         queryParams = request.args
         if not 'fileType' in queryParams:
             registry_log("ERROR", f"==> El parámetros fileType es obligatorio")
-            registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+            registry_log(
+                "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
             return {"msg": f"El parámetros fileType es obligatorio"}, 400
         # Se valida el tipo de archivo a retornar
         fileType = queryParams.get("fileType")
         if fileType != 'original' and fileType != 'compressed':
-            registry_log("ERROR", f"==> Solo se permiten los siguiente formatos [original, compressed]")
-            registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+            registry_log(
+                "ERROR", f"==> Solo se permiten los siguiente formatos [original, compressed]")
+            registry_log(
+                "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
             return {"msg": f"Solo se permiten los siguiente formatos [original, compressed]"}, 400
         # Se consulta la tarea con base al id
         registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
@@ -315,8 +332,10 @@ def downloadFiles(id_task):
         # Se valida si no existe la tarea
         registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
         if task is None:
-            registry_log("ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
-            registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+            registry_log(
+                "ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
+            registry_log(
+                "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
             return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
         pathFileToDownload = None
         extensionFileToDownload = None
@@ -334,14 +353,17 @@ def downloadFiles(id_task):
         blob = bucket.blob(pathFileToDownload)
         # Descargamos temporalmente el archivo
         with tempfile.NamedTemporaryFile() as temp:
-            blob.download_to_filename(temp.name)  
-            registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
-            registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
+            blob.download_to_filename(temp.name)
+            registry_log(
+                "INFO", f"==> La a descarga de archivos fue realizada correctamente")
+            registry_log(
+                "INFO", f"<=================== Fin de la descarga de archivos ===================>")
             return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
     except Exception as e:
         traceback.print_stack()
         registry_log("ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
-        registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+        registry_log(
+            "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
         return {"msg": str(e)}, 500
 
 # Funcions utilitarias
@@ -351,7 +373,8 @@ def publish_message(args):
     publisher = pubsub_v1.PublisherClient()
     args = json.dumps(args).encode('utf-8')
     messege_published = publisher.publish(PATH_TOPIC, args)
-    registry_log("INFO", f"==> Se publico el mensaje exitosamente, [id = {messege_published.result()}]")
+    registry_log(
+        "INFO", f"==> Se publico el mensaje exitosamente, [id = {messege_published.result()}]")
 
 # Funcion que permite conectarnos a google storage
 def connect_storage():
@@ -365,21 +388,21 @@ def upload_file(file, userFilesPath, fileNameSanitized):
     bucket = storage.Bucket(client, BUCKET_GOOGLE)
     blob = bucket.blob(f"{userFilesPath}{fileNameSanitized}")
     blob.upload_from_string(file.read(), content_type=file.content_type)
-    
+
 # Funcion que permite registrar tarea en BD
 def registry_task_to_db(fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, fileMimetype, idUser):
     # Registramos tarea en BD
     newTask = Task(file_name=fileName, file_format=f".{fileFormat}",
-                    file_new_format=formatHomologation(fileNewFormat),
-                    file_origin_path=f"{userFilesPath}{fileNameSanitized}", status='uploaded',
-                    mimetype=fileMimetype, id_user=idUser)
+                   file_new_format=formatHomologation(fileNewFormat),
+                   file_origin_path=f"{userFilesPath}{fileNameSanitized}", status='uploaded',
+                   mimetype=fileMimetype, id_user=idUser)
     db.session.add(newTask)
     db.session.commit()
-    return newTask    
+    return newTask
 
 # Funcion que permite generar letras aleatorias
 def random_letters(max):
-       return ''.join(random.choice(string.ascii_letters) for x in range(max))
+    return ''.join(random.choice(string.ascii_letters) for x in range(max))
 
 # Funcion para resgitrar logs
 def registry_log(severity, message):
