@@ -1,20 +1,8 @@
 # Start from python:3.8-alpine base image
 FROM python:3.8-alpine
-
-# Configuration environment vars
+# Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
-ENV DB_HOST 34.66.39.220
-ENV DB_NAME postgres
-ENV DB_USER postgres
-ENV DB_PASSWORD dbpass
-ENV DB_PORT 5432
-ENV SEPARATOR_SO /
-ENV BUCKET_GOOGLE bucket-converter-web-app
-ENV PATH_BUCKET_KEY misw4204-202312-swnube-bucket.json
-ENV PATH_PUBSUB_KEY misw4204-202312-swnube-pub-sub.json
-ENV PATH_TOPIC projects/misw4204-202312-swnube/topics/tasks-topic
-
-# Update, upgrade system and install packages
+# Adding git, bash and openssh to the image
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh \
     python3-dev \
@@ -23,12 +11,10 @@ RUN apk update && apk upgrade && \
     libffi-dev \
     libpq-dev \
     nfs-utils
-
 # Copy local code to the container image.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
-
 # Install production dependencies.
 RUN pip install --no-cache-dir -r requirements.txt
 
