@@ -123,27 +123,28 @@ def get_health():
 # Recurso que permite realizar el loggueo
 @app.route("/api/auth/login", methods=['GET', 'POST'])
 def login():
-    try:
-        password_encriptada = hashlib.md5(
-            request.json["password"].encode("utf-8")
-        ).hexdigest()
-        usuario = User.query.filter(
-            User.username == request.json["username"],
-            User.password == password_encriptada,
-        ).first()
+    if request.method == 'POST':
+        try:
+            password_encriptada = hashlib.md5(
+                request.json["password"].encode("utf-8")
+            ).hexdigest()
+            usuario = User.query.filter(
+                User.username == request.json["username"],
+                User.password == password_encriptada,
+            ).first()
 
-        if usuario is None:
-            return {"msg": "Usuario o contraseña invalida"}, 409
+            if usuario is None:
+                return {"msg": "Usuario o contraseña invalida"}, 409
 
-        token_de_acceso = create_access_token(identity=usuario.id)
-        return {
-            "msg": "Inicio de sesión exitoso",
-            "username": usuario.username,
-            "token": token_de_acceso,
-        }
-    except Exception as e:
-        traceback.print_stack()
-        return {"msg": str(e)}, 500
+            token_de_acceso = create_access_token(identity=usuario.id)
+            return {
+                "msg": "Inicio de sesión exitoso",
+                "username": usuario.username,
+                "token": token_de_acceso,
+            }
+        except Exception as e:
+            traceback.print_stack()
+            return {"msg": str(e)}, 500
 
 # Recurso que permite registrar un usuario nuevo
 @app.route("/api/auth/signup", methods=['GET', 'POST'])
