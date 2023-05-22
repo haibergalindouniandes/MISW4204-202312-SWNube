@@ -96,7 +96,7 @@ tasks_schema = TaskSchema(many=True)
 
 # Recursos
 # Recurso que retorna el estado del sistema
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/", methods=['GET', 'POST', 'DELETE'])
 def get_health():
     hostIp = socket.gethostbyname(socket.gethostname())
     hostName = socket.gethostname()
