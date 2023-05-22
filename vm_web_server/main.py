@@ -265,11 +265,8 @@ def tasks():
                 "ERROR", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": str(e)}, 500
 
-    else:
-        return {"msg": "Method is no allowed"}, 500
-
 # Recursos que permite gestionar las tareas de conversion
-@app.route("/api/tasks/<id_task>", methods=['GET', 'DELETE'])
+@app.route("/api/tasks/<int:id_task>", methods=['GET', 'DELETE'])
 @jwt_required()
 def taskById(id_task):
     if request.method == 'DELETE':
@@ -306,7 +303,7 @@ def taskById(id_task):
         return jsonify(task_schema.dump(Task.query.get_or_404(id_task)))
 
 # Recursos que permite gestionar las tareas de conversion
-@app.route("/api/files/<id_task>", methods=['GET'])
+@app.route("/api/files/<int:id_task>", methods=['GET'])
 def downloadFiles(id_task):
     try:
         registry_log(
