@@ -11,7 +11,6 @@ from flask import Flask
 from flask import request
 from flask_cors import CORS
 from flask_restful import Api
-from flask_restful import Resource
 from datetime import datetime
 from zipfile import ZIP_DEFLATED, ZipFile
 from google.cloud import storage
