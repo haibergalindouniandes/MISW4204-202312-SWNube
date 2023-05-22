@@ -1,19 +1,19 @@
 import hashlib
-# import json
+import json
 import os
 import random
 import string
 import socket
 import traceback
-# import tempfile
+import tempfile
 from datetime import datetime
-# from flask import request, send_file
+from flask import request, send_file
 from flask import request
 from models import db, User, UserSchema, Task, TaskSchema
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
-# from google.cloud import storage, pubsub_v1
+from google.cloud import storage, pubsub_v1
 
 # Constantes
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", default="zip,7z,tgz,tbz")
@@ -136,7 +136,7 @@ class ConvertTaskFileResource(Resource):
             fileNameSanitized = f"{prefix}{fileNameSanitized}"
             
             # Subimos el archivo 
-            # upload_file(file, userFilesPath, fileNameSanitized)
+            upload_file(file, userFilesPath, fileNameSanitized)
             
             # Obtenemos información del archivo
             fileName = fileNameSanitized.rsplit('.', 1)[0]
@@ -150,7 +150,7 @@ class ConvertTaskFileResource(Resource):
             # Enviamos de tarea asincrona
             args = (task_schema.dump(newTask))
             registry_log("INFO", f"==> Se envia al Topic [{PATH_TOPIC}] el siguiente mensaje [{str(args)}]")
-            # publish_message(args)
+            publish_message(args)
             # Retornamos respuesta exitosa
             registry_log("INFO", f"<=================== Fin de la creación de la tarea ===================>")
             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
@@ -272,43 +272,42 @@ class FileDownloadResource(Resource):
                 extensionFileToDownload = task.file_new_format
             
             # Descargamos el archivo temporalmente
-            # # Nos conectamos al bucket
-            # client = connect_storage()
-            # bucket = storage.Bucket(client, BUCKET_GOOGLE)
-            # blob = bucket.blob(pathFileToDownload)
+            # Nos conectamos al bucket
+            client = connect_storage()
+            bucket = storage.Bucket(client, BUCKET_GOOGLE)
+            blob = bucket.blob(pathFileToDownload)
             # Descargamos temporalmente el archivo
-            # with tempfile.NamedTemporaryFile() as temp:
-            #     blob.download_to_filename(temp.name)  
-            #     registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
-            #     registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
-            #     return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
-            return {"msg": f"Metodo pendiente de implementar"}
+            with tempfile.NamedTemporaryFile() as temp:
+                blob.download_to_filename(temp.name)  
+                registry_log("INFO", f"==> La a descarga de archivos fue realizada correctamente")
+                registry_log("INFO", f"<=================== Fin de la descarga de archivos ===================>")
+                return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
         except Exception as e:
             traceback.print_stack()
             registry_log("ERROR", f"==> Se produjo el siguiente [{str(e)}]")
             registry_log("ERROR", f"<=================== Fin de la descarga de archivos ===================>")
             return {"msg": str(e)}, 500
 
-# # Funcion para envio de mensaje via pubsub
-# def publish_message(args):
-#     # Creamos el ciente publihser
-#     publisher = pubsub_v1.PublisherClient()
-#     args = json.dumps(args).encode('utf-8')
-#     messege_published = publisher.publish(PATH_TOPIC, args)
-#     registry_log("INFO", f"==> Se publico el mensaje exitosamente, [id = {messege_published.result()}]")
+# Funcion para envio de mensaje via pubsub
+def publish_message(args):
+    # Creamos el ciente publihser
+    publisher = pubsub_v1.PublisherClient()
+    args = json.dumps(args).encode('utf-8')
+    messege_published = publisher.publish(PATH_TOPIC, args)
+    registry_log("INFO", f"==> Se publico el mensaje exitosamente, [id = {messege_published.result()}]")
 
-# # Funcion que permite conectarnos a google storage
-# def connect_storage():
-#     # Nos Autenticamos con el service account private key
-#     return storage.Client.from_service_account_json(PATH_BUCKET_KEY)
+# Funcion que permite conectarnos a google storage
+def connect_storage():
+    # Nos Autenticamos con el service account private key
+    return storage.Client.from_service_account_json(PATH_BUCKET_KEY)
 
-# # Funcion que permite subir un archivo al bucket
-# def upload_file(file, userFilesPath, fileNameSanitized):
-#     client = connect_storage()
-#     # Nos conectamos al bucket
-#     bucket = storage.Bucket(client, BUCKET_GOOGLE)
-#     blob = bucket.blob(f"{userFilesPath}{fileNameSanitized}")
-#     blob.upload_from_string(file.read(), content_type=file.content_type)
+# Funcion que permite subir un archivo al bucket
+def upload_file(file, userFilesPath, fileNameSanitized):
+    client = connect_storage()
+    # Nos conectamos al bucket
+    bucket = storage.Bucket(client, BUCKET_GOOGLE)
+    blob = bucket.blob(f"{userFilesPath}{fileNameSanitized}")
+    blob.upload_from_string(file.read(), content_type=file.content_type)
     
 # Funcion que permite registrar tarea en BD
 def registry_task_to_db(fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, fileMimetype, idUser):
