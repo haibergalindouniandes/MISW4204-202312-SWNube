@@ -112,10 +112,9 @@ def get_health():
     return {"host_name": hostName, "host_ip": hostIp, "remote_ip": remoteIp, "timestamp": str(timestamp)}
 
 # Recurso que permite realizar el loggueo
-@app.route("/api/auth/login", methods=['POST'])
+@app.route("/api/auth/login", methods=['GET', 'POST'])
 def login():
     try:
-        body = request.json
         password_encriptada = hashlib.md5(
             request.json["password"].encode("utf-8")
         ).hexdigest()
@@ -138,7 +137,7 @@ def login():
         return {"msg": str(e)}, 500
 
 # Recurso que permite registrar un usuario nuevo
-@app.route("/api/auth/signup", methods=['POST'])
+@app.route("/api/auth/signup", methods=['GET', 'POST'])
 def signup():
         usuario = User.query.filter(User.username == request.json["username"]).first()
         if usuario is None:
@@ -165,7 +164,7 @@ def signup():
 
 
 # Recursos que permite gestionar las tareas de conversion
-@app.route("/api/tasks", methods=['POST', 'GET'])
+@app.route("/api/tasks", methods=['GET', 'POST'])
 @jwt_required()
 def tasks():
     if request.method == 'POST':
