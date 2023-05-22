@@ -3,6 +3,7 @@ import json
 import os
 import py7zr
 import socket
+import base64
 import tarfile
 import tempfile
 import psycopg2
@@ -210,20 +211,26 @@ def registry_log(severity, message):
 # Recurso que inicia el procesamiento de los archivos
 @app.route("/api/tasks/worker", methods=['POST'])
 def post_task():
-    message = request.json
+    body = request.json
     try:
         registry_log(
             "INFO", f"<=================== Inicio del procesamiento de la tarea ===================>")
-        registry_log("INFO", f"==> Tarea [{str(message)}]")
-
+        registry_log("INFO", f"==> Tarea [{str(body)}]")
+        # Obtenemos el mensaje y lo decodificamos
+        message = body['message']
+        registry_log("INFO", f"==> Message [{body['message']}]")
+        
+        data = message['data']
+        dataDecode = base64.b64decode(data)
+        dataJson = json.loads(dataDecode)
         # Validamos la tarea
         db = connect_db()
-        task = get_task_by_id(db, message['id'])
+        task = get_task_by_id(db, dataJson['id'])
         if task == None:
             raise Exception(
-                f"==> La tarea [{message['id']}] fue eliminada")
+                f"==> La tarea [{dataJson['id']}] fue eliminada")
 
-        userFilePathDestination = f"{FILES_PATH}{message['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
+        userFilePathDestination = f"{FILES_PATH}{dataJson['id_user']}{SEPARATOR_SO}{COMPRESSED_PATH_FILES}"
         registry_log(
             "INFO", f"==> Ruta del archivo [{userFilePathDestination}]")
 
@@ -231,14 +238,14 @@ def post_task():
         create_temp_directory()
 
         # Convertimos archivo y lo subimos al servidor
-        fileCompressed = compress_file_and_upload(message["file_origin_path"], userFilePathDestination,
-                                                    message["file_name"], message["file_new_format"], message["file_format"])
+        fileCompressed = compress_file_and_upload(dataJson["file_origin_path"], userFilePathDestination,
+                                                    dataJson["file_name"], dataJson["file_new_format"], dataJson["file_format"])
 
         # Actualizamos tarea en BD
-        update_task(db, message['id'], fileCompressed)
+        update_task(db, dataJson['id'], fileCompressed)
         registry_log(
-            "INFO", f"==> Se actualiza la tarea en BD [{message['id']}]")
-        return {"msg": f"Se convirtio tarea [{message['id']}] exitosamente"}
+            "INFO", f"==> Se actualiza la tarea en BD [{dataJson['id']}]")
+        return {"msg": f"Se convirtio tarea [{dataJson['id']}] exitosamente"}
     except Exception as e:
         registry_log("ERROR", f"==> {str(e)}")
         return {"msg": str(e)}, 500
