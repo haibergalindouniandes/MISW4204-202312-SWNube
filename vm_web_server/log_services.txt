@@ -1,0 +1,5 @@
+[INFO]-[2023-05-22 15:53:23.189636]-[<=================== Inicio de la descarga de archivos ===================>]
+[INFO]-[2023-05-22 15:53:23.190191]-[==> Se consultara la tarea [13]]
+[INFO]-[2023-05-22 15:53:23.354206]-[==> Resultado de la consulta [<Task 13>]]
+[ERROR]-[2023-05-22 15:53:23.476118]-[==> Se produjo el siguiente error  [[Errno 13] Permission denied: 'C:\\Users\\HAIBER~1.GAL\\AppData\\Local\\Temp\\tmp8mzoobxo']]
+[ERROR]-[2023-05-22 15:53:23.477241]-[<=================== Fin de la descarga de archivos ===================>]
