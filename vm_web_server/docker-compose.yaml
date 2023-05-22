@@ -16,27 +16,15 @@ services:
       - PATH_BUCKET_KEY=misw4204-202312-swnube-bucket.json
       - PATH_PUBSUB_KEY=misw4204-202312-swnube-pub-sub.json
       - PATH_TOPIC=projects/misw4204-202312-swnube/topics/tasks-topic
-    command: sh run_commands.sh
-    build: ./services
-    working_dir: /backend/
+    build: .
+    working_dir: /app/
+    ports:
+      - 80:80
     volumes:
-      - ./services/:/backend/
+      - .:/app/
     networks:
       - convert_network
   
-  nginx_proxy:
-    image: nginx:latest
-    container_name: nginx_proxy
-    restart: always
-    ports:
-      - 8080:8080
-    volumes:
-      - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
-    networks:
-      - convert_network
-    depends_on:
-      - mcs_converter
-
 networks:
   convert_network:
     driver: bridge

@@ -1,18 +1,9 @@
-# Start from python:3.8-alpine base image
-FROM python:3.8-alpine
-# Adding git, bash and openssh to the image
-RUN apk update && apk upgrade && \
-    apk add --no-cache bash git openssh \
-    python3-dev \
-    gcc \
-    libc-dev \
-    libffi-dev \
-    libpq-dev \
-    nfs-utils
-# Make dir app
-RUN mkdir /backend
-WORKDIR /backend
+# Use the official lightweight Python image.
+# https://hub.docker.com/_/python
+FROM python:3.11-slim
 
+# Configuration environment vars
+ENV PYTHONUNBUFFERED True
 ENV DB_HOST 34.66.39.220
 ENV DB_NAME postgres
 ENV DB_USER postgres
@@ -24,10 +15,23 @@ ENV PATH_BUCKET_KEY misw4204-202312-swnube-bucket.json
 ENV PATH_PUBSUB_KEY misw4204-202312-swnube-pub-sub.json
 ENV PATH_TOPIC projects/misw4204-202312-swnube/topics/tasks-topic
 
-COPY requirements.txt /backend/
-RUN pip install -r requirements.txt
-# Copy the source from the current directory to the Working Directory inside the container
-COPY . .
+# Update, upgrade system and install packages
+RUN apt-get upgrade
+RUN apt-get update
+RUN apt-get install python3-dev -y
+RUN apt-get install gcc -y
+RUN apt-get install libc-dev -y
+RUN apt-get install libffi-dev -y
+RUN apt-get install libpq-dev -y
+
+# Copy local code to the container image.
+ENV APP_HOME /app
+WORKDIR $APP_HOME
+COPY . ./
+
+# Install production dependencies.
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.
 # For environments with multiple CPU cores, increase the number of workers
