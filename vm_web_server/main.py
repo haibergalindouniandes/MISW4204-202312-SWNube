@@ -140,7 +140,7 @@ def login():
             return jsonify({
                 "msg": "Inicio de sesión exitoso",
                 "username": usuario.username,
-                "token": token_de_acceso,
+                "token": token_de_acceso
             })
         except Exception as e:
             traceback.print_stack()
