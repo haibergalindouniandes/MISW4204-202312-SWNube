@@ -160,255 +160,249 @@ def formatHomologation(format):
     return formatHomologated
 
 # Recursos
+# Recursos que permite gestionar las tareas de conversion
+@app.route("/api/tasks/<int:id_task>", methods=['GET', 'DELETE'])
+@jwt_required()
+def taskById(id_task):
+    if request.method == 'DELETE':
+        try:
+            registry_log(
+                "INFO", f"<=================== Inicio de la eliminación de tareas ===================>")
+            # Se consulta la tarea con base al id
+            registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
+            task = Task.query.filter(Task.id == id_task).first()
+            # Se valida si no existe la tarea
+            registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
+            if task is None:
+                registry_log(
+                    "ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
+                registry_log(
+                    "ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+                return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
+            # Se elimina la tarea
+            db.session.delete(task)
+            db.session.commit()
+            registry_log(
+                "INFO", f"==> La tarea con el id [{id_task}] fue eliminada correctamente")
+            registry_log(
+                "INFO", f"<=================== Fin de la eliminación de tareas ===================>")
+            return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
+        except Exception as e:
+            traceback.print_stack()
+            registry_log(
+                "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
+            registry_log(
+                "ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
+            return {"msg": str(e)}, 500
+    else:
+        return jsonify(task_schema.dump(Task.query.get_or_404(id_task)))
+
+# Recursos que permite gestionar las tareas de conversion
+@app.route("/api/files/<int:id_task>", methods=['GET'])
+def downloadFiles(id_task):
+    try:
+        registry_log(
+            "INFO", f"<=================== Inicio de la descarga de archivos ===================>")
+        # Se valida si viene fileType
+        queryParams = request.args
+        if not 'fileType' in queryParams:
+            registry_log("ERROR", f"==> El parámetros fileType es obligatorio")
+            registry_log(
+                "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+            return {"msg": f"El parámetros fileType es obligatorio"}, 400
+        # Se valida el tipo de archivo a retornar
+        fileType = queryParams.get("fileType")
+        if fileType != 'original' and fileType != 'compressed':
+            registry_log(
+                "ERROR", f"==> Solo se permiten los siguiente formatos [original, compressed]")
+            registry_log(
+                "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+            return {"msg": f"Solo se permiten los siguiente formatos [original, compressed]"}, 400
+        # Se consulta la tarea con base al id
+        registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
+        task = Task.query.filter(Task.id == id_task).first()
+        # Se valida si no existe la tarea
+        registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
+        if task is None:
+            registry_log(
+                "ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
+            registry_log(
+                "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+            return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
+        pathFileToDownload = None
+        extensionFileToDownload = None
+        # Descargamos el archivo
+        if fileType == 'original':
+            pathFileToDownload = task.file_origin_path
+            extensionFileToDownload = task.file_format
+        else:
+            pathFileToDownload = task.file_convert_path
+            extensionFileToDownload = task.file_new_format
+        # Descargamos el archivo temporalmente
+        # Nos conectamos al bucket
+        client = connect_storage()
+        bucket = storage.Bucket(client, BUCKET_GOOGLE)
+        blob = bucket.blob(pathFileToDownload)
+        # Descargamos temporalmente el archivo
+        with tempfile.NamedTemporaryFile() as temp:
+            blob.download_to_filename(temp.name)
+            registry_log(
+                "INFO", f"==> La a descarga de archivos fue realizada correctamente")
+            registry_log(
+                "INFO", f"<=================== Fin de la descarga de archivos ===================>")
+            return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
+    except Exception as e:
+        traceback.print_stack()
+        registry_log("ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
+        registry_log(
+            "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
+        return {"msg": str(e)}, 500
+
+
+# Recursos que permite gestionar las tareas de conversion
+@app.route("/api/tasks", methods=['GET', 'POST'])
+@jwt_required()
+def tasks():
+    if request.method == 'POST':
+        try:
+            registry_log(
+                "INFO", f"<=================== Inicio de la consulta de todas las tareas ===================>")
+            queryParams = request.args
+            tasks = tasks_schema.dump(Task.query.all())
+            registry_log(
+                "INFO", f"==> Tareas retornadas [{str(tasks)}]")
+            if queryParams.get('order') != None:
+                if int(queryParams.get('order')) == 1:
+                    tasks = sorted(tasks, key=lambda d: d["id"], reverse=True)
+                else:
+                    tasks = sorted(tasks, key=lambda d: d["id"], reverse=False)
+            if 'max' in queryParams:
+                tasks = tasks[: int(queryParams.get("max"))]
+            registry_log(
+                "INFO", f"==> Tareas filtradas [{str(tasks)}]")
+            registry_log(
+                "INFO", f"<=================== Fin de la consulta de todas las tareas ===================>")
+            return jsonify(tasks)
+        except Exception as e:
+            registry_log(
+                "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
+            return {"msg": str(e)}, 500
+    elif request.method == 'GET':
+        try:
+            registry_log(
+                "INFO", f"<=================== Inicio de la creación de la tarea ===================>")
+            # Validacion de parametros de entrada
+            if not 'fileName' in request.files:
+                return {"msg": "Parámetros de entrada invalidos. El parámetro 'fileName' es obligatorio."}, 400
+
+            if not 'newFormat' in request.form:
+                return {"msg": "Parámetros de entrada invalidos. El parámetro 'newFormat' es obligatorio."}, 400
+
+            fileNewFormat = request.form['newFormat']
+
+            if not fileNewFormat in ALLOWED_EXTENSIONS:
+                return {"msg": f"Solo se permiten los siguiente formatos [{ALLOWED_EXTENSIONS}]"}, 400
+
+            # Obtenemos el archivo
+            file = request.files['fileName']
+            dataFile = file.filename
+            registry_log(
+                "INFO", f"==> Nombre original del archivo recibido [{dataFile}]")
+            fileNameSanitized = secure_filename(file.filename)
+            registry_log(
+                "INFO", f"==> Nombre sanitizado del archivo recibido [{fileNameSanitized}]")
+            idUser = get_jwt_identity()
+
+            # Generamos el path del archivo
+            userFilesPath = f"{FILES_PATH}{idUser}{SEPARATOR_SO}{ORIGIN_PATH_FILES}{SEPARATOR_SO}"
+
+            # Generamos el prefijo para el archivo
+            prefix = f"{random_letters(MAX_LETTERS)}_"
+            fileNameSanitized = f"{prefix}{fileNameSanitized}"
+
+            # Subimos el archivo
+            upload_file(file, userFilesPath, fileNameSanitized)
+
+            # Obtenemos información del archivo
+            fileName = fileNameSanitized.rsplit('.', 1)[0]
+            dataFile = dataFile.split('.')
+            fileFormat = dataFile[-1]
+
+            # Guardamos la informacion del archivo en DB
+            newTask = registry_task_to_db(
+                fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, file.mimetype, idUser)
+
+            registry_log(
+                "INFO", f"==> Se registra tarea en BD [{task_schema.dump(newTask)}]")
+            # Enviamos de tarea asincrona
+            args = (task_schema.dump(newTask))
+            registry_log(
+                "INFO", f"==> Se envia al Topic [{PATH_TOPIC}] el siguiente mensaje [{str(args)}]")
+            publish_message(args)
+            # Retornamos respuesta exitosa
+            registry_log(
+                "INFO", f"<=================== Fin de la creación de la tarea ===================>")
+            return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
+        except Exception as e:
+            registry_log("ERROR", f"==> {str(e)}")
+            registry_log(
+                "ERROR", f"<=================== Fin de la creación de la tarea ===================>")
+            return {"msg": str(e)}, 500
+
 # Recurso que permite realizar el loggueo
-# @app.route("/api/auth/login")
-# def login():
-#     if request.method == 'POST':
-#         try:
-#             password_encriptada = hashlib.md5(
-#                 request.json["password"].encode("utf-8")
-#             ).hexdigest()
-#             usuario = User.query.filter(
-#                 User.username == request.json["username"],
-#                 User.password == password_encriptada,
-#             ).first()
+@app.route("/api/auth/login", methods=['POST'])
+def login():
+    if request.method == 'POST':
+        try:
+            password_encriptada = hashlib.md5(
+                request.json["password"].encode("utf-8")
+            ).hexdigest()
+            usuario = User.query.filter(
+                User.username == request.json["username"],
+                User.password == password_encriptada,
+            ).first()
 
-#             if usuario is None:
-#                 return {"msg": "Usuario o contraseña invalida"}, 409
+            if usuario is None:
+                return {"msg": "Usuario o contraseña invalida"}, 409
 
-#             token_de_acceso = create_access_token(identity=usuario.id)
-#             return jsonify({
-#                 "msg": "Inicio de sesión exitoso",
-#                 "username": usuario.username,
-#                 "token": token_de_acceso
-#             })
-#         except Exception as e:
-#             traceback.print_stack()
-#             return {"msg": str(e)}, 500
+            token_de_acceso = create_access_token(identity=usuario.id)
+            return jsonify({
+                "msg": "Inicio de sesión exitoso",
+                "username": usuario.username,
+                "token": token_de_acceso
+            })
+        except Exception as e:
+            traceback.print_stack()
+            return {"msg": str(e)}, 500
 
-# # Recurso que permite registrar un usuario nuevo
-# @app.route("/api/auth/signup", methods=['GET', 'POST'])
-# def signup():
-#     if request.method == 'POST':
-#         usuario = User.query.filter(
-#             User.username == request.json["username"]).first()
-#         if usuario is None:
-#             email = User.query.filter(
-#                 User.email == request.json["email"]).first()
-#             if email is None:
-#                 if request.json["password1"] == request.json["password2"]:
-#                     password_encriptada = hashlib.md5(
-#                         request.json["password1"].encode("utf-8")
-#                     ).hexdigest()
-#                     new_user = User(
-#                         username=request.json["username"],
-#                         password=password_encriptada,
-#                         email=request.json["email"],
-#                     )
-#                     db.session.add(new_user)
-#                     db.session.commit()
-#                     return user_schema.dump(new_user)
-#                 else:
-#                     return {"msg": "El password no coincide"}, 409
-#             else:
-#                 return {"msg": "El email ya existe"}, 409
-#         else:
-#             return {"msg": "El usuario ya existe"}, 409
-
-
-# # Recursos que permite gestionar las tareas de conversion
-# @app.route("/api/tasks/<int:id_task>", methods=['GET', 'DELETE'])
-# @jwt_required()
-# def taskById(id_task):
-#     if request.method == 'DELETE':
-#         try:
-#             registry_log(
-#                 "INFO", f"<=================== Inicio de la eliminación de tareas ===================>")
-#             # Se consulta la tarea con base al id
-#             registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
-#             task = Task.query.filter(Task.id == id_task).first()
-#             # Se valida si no existe la tarea
-#             registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
-#             if task is None:
-#                 registry_log(
-#                     "ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
-#                 registry_log(
-#                     "ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
-#                 return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
-#             # Se elimina la tarea
-#             db.session.delete(task)
-#             db.session.commit()
-#             registry_log(
-#                 "INFO", f"==> La tarea con el id [{id_task}] fue eliminada correctamente")
-#             registry_log(
-#                 "INFO", f"<=================== Fin de la eliminación de tareas ===================>")
-#             return {"msg": f"La tarea con el id [{id_task}] fue eliminada correctamente"}
-#         except Exception as e:
-#             traceback.print_stack()
-#             registry_log(
-#                 "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
-#             registry_log(
-#                 "ERROR", f"<=================== Fin de la eliminación de tareas ===================>")
-#             return {"msg": str(e)}, 500
-#     else:
-#         return jsonify(task_schema.dump(Task.query.get_or_404(id_task)))
-
-# # Recursos que permite gestionar las tareas de conversion
-# @app.route("/api/files/<int:id_task>", methods=['GET'])
-# def downloadFiles(id_task):
-#     try:
-#         registry_log(
-#             "INFO", f"<=================== Inicio de la descarga de archivos ===================>")
-#         # Se valida si viene fileType
-#         queryParams = request.args
-#         if not 'fileType' in queryParams:
-#             registry_log("ERROR", f"==> El parámetros fileType es obligatorio")
-#             registry_log(
-#                 "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
-#             return {"msg": f"El parámetros fileType es obligatorio"}, 400
-#         # Se valida el tipo de archivo a retornar
-#         fileType = queryParams.get("fileType")
-#         if fileType != 'original' and fileType != 'compressed':
-#             registry_log(
-#                 "ERROR", f"==> Solo se permiten los siguiente formatos [original, compressed]")
-#             registry_log(
-#                 "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
-#             return {"msg": f"Solo se permiten los siguiente formatos [original, compressed]"}, 400
-#         # Se consulta la tarea con base al id
-#         registry_log("INFO", f"==> Se consultara la tarea [{id_task}]")
-#         task = Task.query.filter(Task.id == id_task).first()
-#         # Se valida si no existe la tarea
-#         registry_log("INFO", f"==> Resultado de la consulta [{str(task)}]")
-#         if task is None:
-#             registry_log(
-#                 "ERROR", f"==> La tarea con el id [{id_task}] no se encuentra registrada")
-#             registry_log(
-#                 "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
-#             return {"msg": f"La tarea con el id [{id_task}] no se encuentra registrada"}, 400
-#         pathFileToDownload = None
-#         extensionFileToDownload = None
-#         # Descargamos el archivo
-#         if fileType == 'original':
-#             pathFileToDownload = task.file_origin_path
-#             extensionFileToDownload = task.file_format
-#         else:
-#             pathFileToDownload = task.file_convert_path
-#             extensionFileToDownload = task.file_new_format
-#         # Descargamos el archivo temporalmente
-#         # Nos conectamos al bucket
-#         client = connect_storage()
-#         bucket = storage.Bucket(client, BUCKET_GOOGLE)
-#         blob = bucket.blob(pathFileToDownload)
-#         # Descargamos temporalmente el archivo
-#         with tempfile.NamedTemporaryFile() as temp:
-#             blob.download_to_filename(temp.name)
-#             registry_log(
-#                 "INFO", f"==> La a descarga de archivos fue realizada correctamente")
-#             registry_log(
-#                 "INFO", f"<=================== Fin de la descarga de archivos ===================>")
-#             return send_file(temp.name, attachment_filename=f"{task.file_name}{extensionFileToDownload}")
-#     except Exception as e:
-#         traceback.print_stack()
-#         registry_log("ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
-#         registry_log(
-#             "ERROR", f"<=================== Fin de la descarga de archivos ===================>")
-#         return {"msg": str(e)}, 500
-
-
-# # Recursos que permite gestionar las tareas de conversion
-# @app.route("/api/tasks", methods=['GET', 'POST'])
-# @jwt_required()
-# def tasks():
-#     if request.method == 'POST':
-#         try:
-#             registry_log(
-#                 "INFO", f"<=================== Inicio de la consulta de todas las tareas ===================>")
-#             queryParams = request.args
-#             tasks = tasks_schema.dump(Task.query.all())
-#             registry_log(
-#                 "INFO", f"==> Tareas retornadas [{str(tasks)}]")
-#             if queryParams.get('order') != None:
-#                 if int(queryParams.get('order')) == 1:
-#                     tasks = sorted(tasks, key=lambda d: d["id"], reverse=True)
-#                 else:
-#                     tasks = sorted(tasks, key=lambda d: d["id"], reverse=False)
-#             if 'max' in queryParams:
-#                 tasks = tasks[: int(queryParams.get("max"))]
-#             registry_log(
-#                 "INFO", f"==> Tareas filtradas [{str(tasks)}]")
-#             registry_log(
-#                 "INFO", f"<=================== Fin de la consulta de todas las tareas ===================>")
-#             return jsonify(tasks)
-#         except Exception as e:
-#             registry_log(
-#                 "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
-#             return {"msg": str(e)}, 500
-#     elif request.method == 'GET':
-#         try:
-#             registry_log(
-#                 "INFO", f"<=================== Inicio de la creación de la tarea ===================>")
-#             # Validacion de parametros de entrada
-#             if not 'fileName' in request.files:
-#                 return {"msg": "Parámetros de entrada invalidos. El parámetro 'fileName' es obligatorio."}, 400
-
-#             if not 'newFormat' in request.form:
-#                 return {"msg": "Parámetros de entrada invalidos. El parámetro 'newFormat' es obligatorio."}, 400
-
-#             fileNewFormat = request.form['newFormat']
-
-#             if not fileNewFormat in ALLOWED_EXTENSIONS:
-#                 return {"msg": f"Solo se permiten los siguiente formatos [{ALLOWED_EXTENSIONS}]"}, 400
-
-#             # Obtenemos el archivo
-#             file = request.files['fileName']
-#             dataFile = file.filename
-#             registry_log(
-#                 "INFO", f"==> Nombre original del archivo recibido [{dataFile}]")
-#             fileNameSanitized = secure_filename(file.filename)
-#             registry_log(
-#                 "INFO", f"==> Nombre sanitizado del archivo recibido [{fileNameSanitized}]")
-#             idUser = get_jwt_identity()
-
-#             # Generamos el path del archivo
-#             userFilesPath = f"{FILES_PATH}{idUser}{SEPARATOR_SO}{ORIGIN_PATH_FILES}{SEPARATOR_SO}"
-
-#             # Generamos el prefijo para el archivo
-#             prefix = f"{random_letters(MAX_LETTERS)}_"
-#             fileNameSanitized = f"{prefix}{fileNameSanitized}"
-
-#             # Subimos el archivo
-#             upload_file(file, userFilesPath, fileNameSanitized)
-
-#             # Obtenemos información del archivo
-#             fileName = fileNameSanitized.rsplit('.', 1)[0]
-#             dataFile = dataFile.split('.')
-#             fileFormat = dataFile[-1]
-
-#             # Guardamos la informacion del archivo en DB
-#             newTask = registry_task_to_db(
-#                 fileName, fileFormat, fileNewFormat, userFilesPath, fileNameSanitized, file.mimetype, idUser)
-
-#             registry_log(
-#                 "INFO", f"==> Se registra tarea en BD [{task_schema.dump(newTask)}]")
-#             # Enviamos de tarea asincrona
-#             args = (task_schema.dump(newTask))
-#             registry_log(
-#                 "INFO", f"==> Se envia al Topic [{PATH_TOPIC}] el siguiente mensaje [{str(args)}]")
-#             publish_message(args)
-#             # Retornamos respuesta exitosa
-#             registry_log(
-#                 "INFO", f"<=================== Fin de la creación de la tarea ===================>")
-#             return {"msg": "El archivo sera procesado", "task": task_schema.dump(newTask)}
-#         except Exception as e:
-#             registry_log("ERROR", f"==> {str(e)}")
-#             registry_log(
-#                 "ERROR", f"<=================== Fin de la creación de la tarea ===================>")
-#             return {"msg": str(e)}, 500
-
-
-@app.route('/api/auth/login', methods = ['GET', 'POST'])
-def hello():
-    return {"msg" : request.method}    
+# Recurso que permite registrar un usuario nuevo
+@app.route("/api/auth/signup", methods=['POST'])
+def signup():
+    if request.method == 'POST':
+        usuario = User.query.filter(
+            User.username == request.json["username"]).first()
+        if usuario is None:
+            email = User.query.filter(
+                User.email == request.json["email"]).first()
+            if email is None:
+                if request.json["password1"] == request.json["password2"]:
+                    password_encriptada = hashlib.md5(
+                        request.json["password1"].encode("utf-8")
+                    ).hexdigest()
+                    new_user = User(
+                        username=request.json["username"],
+                        password=password_encriptada,
+                        email=request.json["email"],
+                    )
+                    db.session.add(new_user)
+                    db.session.commit()
+                    return user_schema.dump(new_user)
+                else:
+                    return {"msg": "El password no coincide"}, 409
+            else:
+                return {"msg": "El email ya existe"}, 409
+        else:
+            return {"msg": "El usuario ya existe"}, 409
 
 # Recurso que retorna el estado del sistema
 @app.route('/')
