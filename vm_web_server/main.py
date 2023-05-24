@@ -408,10 +408,7 @@ def formatHomologation(format):
 
 @app.route('/api/auth/login')
 def hello():
-    if request.method == 'POST':
-        return {"msg" : "Prueba POST"}
-    else:
-        return {"msg" : "Prueba GET"}
+    return {"msg" : request.method}    
 
 # Recurso que retorna el estado del sistema
 @app.route('/')
