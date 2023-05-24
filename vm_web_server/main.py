@@ -263,7 +263,7 @@ def downloadFiles(id_task):
 @app.route("/api/tasks", methods=['GET', 'POST'])
 @jwt_required()
 def tasks():
-    if request.method == 'POST':
+    if request.method == 'GET':
         try:
             registry_log(
                 "INFO", f"<=================== Inicio de la consulta de todas las tareas ===================>")
@@ -287,7 +287,7 @@ def tasks():
             registry_log(
                 "ERROR", f"==> Se produjo el siguiente error  [{str(e)}]")
             return {"msg": str(e)}, 500
-    elif request.method == 'GET':
+    elif request.method == 'POST':
         try:
             registry_log(
                 "INFO", f"<=================== Inicio de la creación de la tarea ===================>")
