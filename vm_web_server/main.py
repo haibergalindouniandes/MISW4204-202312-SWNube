@@ -160,6 +160,32 @@ def formatHomologation(format):
     return formatHomologated
 
 # Recursos
+# Recurso que permite realizar el loggueo
+# @app.route("/api/auth/login")
+# def login():
+#     if request.method == 'POST':
+#         try:
+#             password_encriptada = hashlib.md5(
+#                 request.json["password"].encode("utf-8")
+#             ).hexdigest()
+#             usuario = User.query.filter(
+#                 User.username == request.json["username"],
+#                 User.password == password_encriptada,
+#             ).first()
+
+#             if usuario is None:
+#                 return {"msg": "Usuario o contraseña invalida"}, 409
+
+#             token_de_acceso = create_access_token(identity=usuario.id)
+#             return jsonify({
+#                 "msg": "Inicio de sesión exitoso",
+#                 "username": usuario.username,
+#                 "token": token_de_acceso
+#             })
+#         except Exception as e:
+#             traceback.print_stack()
+#             return {"msg": str(e)}, 500
+
 # # Recurso que permite registrar un usuario nuevo
 # @app.route("/api/auth/signup", methods=['GET', 'POST'])
 # def signup():
@@ -379,35 +405,16 @@ def formatHomologation(format):
 #                 "ERROR", f"<=================== Fin de la creación de la tarea ===================>")
 #             return {"msg": str(e)}, 500
 
-# Recurso que permite realizar el loggueo
-@app.route("/api/auth/login")
-def login():
+
+@app.route('/api/auth/login')
+def hello():
     if request.method == 'POST':
-        try:
-            password_encriptada = hashlib.md5(
-                request.json["password"].encode("utf-8")
-            ).hexdigest()
-            usuario = User.query.filter(
-                User.username == request.json["username"],
-                User.password == password_encriptada,
-            ).first()
-
-            if usuario is None:
-                return {"msg": "Usuario o contraseña invalida"}, 409
-
-            token_de_acceso = create_access_token(identity=usuario.id)
-            # return {
-            #     "msg": "Inicio de sesión exitoso",
-            #     "username": usuario.username,
-            #     "token": token_de_acceso
-            # }
-            return "Exitoso", 200
-        except Exception as e:
-            traceback.print_stack()
-            return {"msg": str(e)}, 500
+        return {"msg" : "Prueba POST"}
+    else:
+        return {"msg" : "Prueba GET"}
 
 # Recurso que retorna el estado del sistema
-@app.route("/")
+@app.route('/')
 def get_health():
     hostIp = socket.gethostbyname(socket.gethostname())
     hostName = socket.gethostname()
