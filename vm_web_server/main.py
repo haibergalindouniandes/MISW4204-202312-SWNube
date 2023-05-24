@@ -406,7 +406,7 @@ def formatHomologation(format):
 #             return {"msg": str(e)}, 500
 
 
-@app.route('/api/auth/login')
+@app.route('/api/auth/login', methods = ['GET', 'POST'])
 def hello():
     return {"msg" : request.method}    
 
