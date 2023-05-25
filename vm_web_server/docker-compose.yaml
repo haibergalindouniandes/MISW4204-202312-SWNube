@@ -6,16 +6,15 @@ services:
     restart: always
     privileged: true
     environment:
-      - DB_HOST=34.27.130.169
+      - DB_HOST=34.125.94.171
       - DB_NAME=postgres
       - DB_USER=postgres
       - DB_PASSWORD=dbpass
       - DB_PORT=5432
       - SEPARATOR_SO=/
-      - BUCKET_GOOGLE=bucket-converter-web-app
-      - PATH_BUCKET_KEY=misw4204-202312-swnube-bucket.json
-      - PATH_PUBSUB_KEY=misw4204-202312-swnube-pub-sub.json
-      - PATH_TOPIC=projects/misw4204-202312-swnube/topics/tasks-topic
+      - RABBIT_HOST=10.128.0.26
+      - BUCKET_GOOGLE=bucket-converter-app
+      - PATH_PRIVATE_KEY=dauntless-bay-384421-56876ce150d4.json
     command: sh run_commands.sh
     build: ./services
     working_dir: /backend/
