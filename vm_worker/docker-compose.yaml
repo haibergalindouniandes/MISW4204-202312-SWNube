@@ -2,23 +2,22 @@ version: "3.2"
 services:
   worker:
     image: worker:latest
-    privileged: true
     environment:
-      - C_FORCE_ROOT=true
+      - PORT=80
       - SEPARATOR_SO=/
-      - DB_HOST=34.27.130.169
+      - DB_HOST=34.66.39.220
       - DB_USER=postgres
       - DB_PASS=dbpass
       - DB_NAME=postgres
-      - PATH_PUBSUB_KEY=misw4204-202312-swnube-pub-sub.json
-      - PATH_SUBSCRIBER=projects/misw4204-202312-swnube/subscriptions/tasks-topic-sub
+      - PATH_PRIVATE_KEY=misw4204-202312-swnube-bucket.json
     build: .
     working_dir: /backend/
+    ports:
+      - 80:80
     volumes:
       - .:/backend/
-    command: sh run_commands.sh
     container_name: worker
-    restart: always
+    restart: always    
     networks:
       - convert_network
 

@@ -1,0 +1,5 @@
+[INFO]-[2023-05-22 18:26:27.107735]-[<=================== Inicio de la descarga de archivos ===================>]
+[INFO]-[2023-05-22 18:26:27.118812]-[==> Se consultara la tarea [18]]
+[INFO]-[2023-05-22 18:26:27.286984]-[==> Resultado de la consulta [<Task 18>]]
+[ERROR]-[2023-05-22 18:26:27.467917]-[==> Se produjo el siguiente [[Errno 13] Permission denied: 'C:\\Users\\HAIBER~1.GAL\\AppData\\Local\\Temp\\tmpg1ea_vwm']]
+[ERROR]-[2023-05-22 18:26:27.469917]-[<=================== Fin de la descarga de archivos ===================>]
